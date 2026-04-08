@@ -1,21 +1,72 @@
-# Diploma Project — Intelligent System
+# РС ИТО — Рекомендательная система индивидуальной траектории обучения
 
-## Architecture
-Three backend modules:
-- LLM Orchestrator — chat via OpenRouter API
-- Expert System — rule-based inference (Mivar or Python)
-- RAG Recommender — Qdrant vector search to augment LLM answers
+Дипломный проект, кафедра ИУ5 МГТУ им. Баумана.
+Подбор курсов ЦК, Технопарка, фокусов в дисциплинах, тем курсовых — под карьерную цель студента.
 
-## Stack
-- Backend: Python 3.12, FastAPI, SQLAlchemy 2.x async, PostgreSQL, Qdrant, OpenRouter
-- Frontend: (TBD)
+## Архитектура
 
-## Rules
-- `from __future__ import annotations` in every Python file
-- Router → Service separation, business logic only in services
-- `except BaseException` (not Exception) in async generators
-- `expire_on_commit=False` on async session factory
-- Full patterns: /backend and /frontend
+Три компонента, строгое разделение ответственности:
 
-## Docs
-- docs/ inside each subproject for architecture, API, deploy notes
+| Компонент | Роль | Принцип |
+|-----------|------|---------|
+| **ЭС** (экспертная система) | Ядро. 52 правила "если-то". `StudentProfile → List[Recommendation]` | Детерминированная, заменяемый модуль (Python / КЭСМИ) |
+| **RAG** | Семантический поиск по базе знаний (Qdrant) | Не принимает решений — только обогащает ответы |
+| **LLM-оркестратор** | Понимает запрос, вызывает ЭС/RAG через function calling, формирует ответ | Переводчик, НЕ мозг. Не принимает решений о рекомендациях |
+
+Поток: запрос студента → LLM определяет тип → вызов ЭС или RAG → LLM формирует ответ.
+
+## Интерфейс ЭС
+
+Вход (X1–X12): цель, семестр, статус ТП, нагрузка, пройденные ЦК по категориям, слабые базы, покрытие профиля.
+Выход (Y1–Y6): рекомендация ЦК, Технопарк, фокус в дисциплине, тема курсовой, предупреждение, стратегия.
+
+LLM function calling — три функции:
+- `get_recommendations()` — профиль из БД как есть
+- `recalculate_with_changes(changes)` — пересчёт с точечным изменением (enum)
+- `search_knowledge(query)` — RAG-поиск
+
+Через диалог можно менять: карьерную цель, статус ТП, нагрузку. Семестр, курсы, оценки — только через форму.
+
+## Стек
+
+- **Backend:** Python 3.12, FastAPI, SQLAlchemy 2.x async, PostgreSQL, Qdrant, OpenRouter
+- **Frontend:** TBD
+- **Инфра:** Docker, docker-compose, Alembic
+
+## Среда разработки
+
+ВАЖНО: код пишется локально, запускается на удалённом сервере.
+- НЕ запускать бэкенд локально (нет БД, Qdrant, переменных окружения)
+- НЕ запускать docker/docker-compose локально
+- НЕ запускать alembic локально
+- Локально можно: линтинг, type-check, тесты (unit без БД), установка пакетов фронтенда
+
+## Команды (локально)
+
+```bash
+# линтинг
+ruff check backend/ --fix
+ruff format backend/
+mypy backend/ --strict
+
+# фронтенд
+npm install
+npm run lint
+npm run type-check
+```
+
+## Правила кода
+
+- `from __future__ import annotations` в каждом .py файле
+- Все docstring-ы и комментарии — на русском языке, идентификаторы на английском
+- Router → Service: бизнес-логика ТОЛЬКО в сервисах, роутер — тонкая обёртка
+- `except BaseException` (не Exception) в async-генераторах
+- `expire_on_commit=False` на async session factory
+- ЭС — заменяемый модуль с фиксированным интерфейсом, абстракция через адаптер
+- Каждая рекомендация содержит: rule_id, reasoning, competency_gap
+
+## Документация
+
+- `docs/` — рабочие материалы проектирования (gitignored)
+- При расхождениях: `МЭС_РС_ИТО` и docx (новее) приоритетнее `полное_описание`
+- Полные паттерны кода → скиллы `/backend` и `/frontend`
