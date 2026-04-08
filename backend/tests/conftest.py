@@ -53,7 +53,7 @@ def mock_admin() -> MagicMock:
 
 
 def make_profile(**overrides: object) -> StudentProfile:
-    """Создание StudentProfile с разумными значениями по умолчанию. Можно переопределить любое поле."""
+    """Создание StudentProfile с разумными значениями по умолчанию."""
     defaults: dict[str, object] = {
         "user_id": uuid.uuid4(),
         "semester": 4,
