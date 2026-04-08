@@ -1,0 +1,8 @@
+services:
+  app:
+    build: ./backend
+    network_mode: "host"
+    env_file: ./backend/.env
+    volumes:
+      - ./backend/app:/code/app
+    restart: unless-stopped
