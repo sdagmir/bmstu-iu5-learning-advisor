@@ -191,20 +191,30 @@ class ChatService:
         debug_info: ChatDebugInfo | None,
     ) -> str:
         """search_knowledge: семантический поиск по RAG."""
+        from app.rag.service import rag_service
+
         query = args.get("query", "")
 
-        # RAG ещё не реализован — возвращаем заглушку
-        # TODO: подключить Qdrant когда RAG-модуль будет готов
-        result = (
-            f"[RAG пока не подключён. Запрос: '{query}']\n"
-            "Для получения информации о курсах и программах обратитесь к документации "
-            "цифровой кафедры МГТУ им. Баумана."
-        )
+        try:
+            chunks = await rag_service.search(query, top_k=5)
+        except Exception as exc:
+            logger.warning("RAG поиск недоступен: %s", exc)
+            chunks = []
 
         if debug_info is not None:
-            debug_info.rag_chunks = [f"stub: {query}"]
+            debug_info.rag_chunks = [f"{c.source}: {c.content[:100]}" for c in chunks]
 
-        return result
+        if not chunks:
+            return (
+                f"По запросу '{query}' ничего не найдено в базе знаний. "
+                "Ответь на основе общих знаний или предложи уточнить вопрос."
+            )
+
+        lines = [f"Результаты поиска по запросу '{query}':"]
+        for i, chunk in enumerate(chunks, 1):
+            lines.append(f"\n[{i}] Источник: {chunk.source} (релевантность: {chunk.score:.2f})")
+            lines.append(chunk.content)
+        return "\n".join(lines)
 
     def _build_messages(
         self,
