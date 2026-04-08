@@ -94,6 +94,34 @@ class RAGService:
         """Пересчитать BM25 по актуальному корпусу."""
         self._bm25.fit(self._all_chunks)
 
+    def restore_bm25_from_qdrant(self) -> int:
+        """Восстановить BM25 корпус из Qdrant при старте приложения.
+
+        Загружает все чанки из коллекции и пересчитывает BM25 статистики.
+        Возвращает количество загруженных чанков.
+        """
+        try:
+            source_chunks = self._qdrant.scroll_all_content()
+        except Exception:
+            logger.warning("Qdrant недоступен, BM25 корпус пустой")
+            return 0
+
+        self._all_chunks = []
+        self._source_chunks_map = {}
+        for source, chunks in source_chunks.items():
+            self._all_chunks.extend(chunks)
+            self._source_chunks_map[source] = set(chunks)
+
+        self._rebuild_bm25()
+        total = len(self._all_chunks)
+        if total > 0:
+            logger.info(
+                "BM25 восстановлен: %d чанков из %d документов",
+                total,
+                len(source_chunks),
+            )
+        return total
+
     async def index_document(self, source: str, text: str) -> int:
         """Загрузить документ: чанкинг → dense + sparse → Qdrant.
 

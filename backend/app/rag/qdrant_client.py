@@ -173,6 +173,35 @@ class QdrantService:
         client = self._get_client()
         return client.count(collection_name=self._collection).count
 
+    def scroll_all_content(self, batch_size: int = 100) -> dict[str, list[str]]:
+        """Получить все чанки из коллекции, сгруппированные по source.
+
+        Используется для восстановления BM25 корпуса при старте.
+        """
+        client = self._get_client()
+        source_chunks: dict[str, list[str]] = {}
+        offset = None
+
+        while True:
+            results, offset = client.scroll(
+                collection_name=self._collection,
+                limit=batch_size,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            if not results:
+                break
+            for point in results:
+                source = point.payload.get("source", "unknown")
+                content = point.payload.get("content", "")
+                if content:
+                    source_chunks.setdefault(source, []).append(content)
+            if offset is None:
+                break
+
+        return source_chunks
+
     def close(self) -> None:
         if self._client is not None:
             self._client.close()

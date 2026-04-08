@@ -1,28 +1,34 @@
+"""Безопасность: хеширование паролей (bcrypt), JWT (PyJWT), refresh-токены."""
+
 from __future__ import annotations
 
 import hashlib
-import uuid
+import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
+import jwt
 
 from app.config import settings
 from app.exceptions import UnauthorizedError
 
-pwd_context = CryptContext(schemes=["bcrypt"], bcrypt__rounds=12, deprecated="auto")
-
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    """Хеширование пароля через bcrypt (12 раундов)."""
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12)).decode()
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    """Проверка пароля. Timing-safe."""
+    try:
+        return bcrypt.checkpw(plain.encode(), hashed.encode())
+    except (ValueError, TypeError):
+        return False
 
 
 def create_access_token(user_id: str, role: str) -> str:
+    """Создание JWT access-токена."""
     payload = {
         "sub": user_id,
         "role": role,
@@ -34,9 +40,10 @@ def create_access_token(user_id: str, role: str) -> str:
 
 
 def decode_access_token(token: str) -> dict[str, Any]:
+    """Декодирование и верификация JWT access-токена."""
     try:
         payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
-    except JWTError as exc:
+    except jwt.PyJWTError as exc:
         raise UnauthorizedError("Invalid or expired token") from exc
     if payload.get("type") != "access":
         raise UnauthorizedError("Invalid token type")
@@ -45,10 +52,11 @@ def decode_access_token(token: str) -> dict[str, Any]:
 
 def create_refresh_token() -> tuple[str, str]:
     """Возвращает (raw_token, sha256_hash). Хэш сохраняется в БД, raw отдаётся клиенту."""
-    raw = uuid.uuid4().hex + uuid.uuid4().hex
+    raw = secrets.token_hex(32)
     hashed = hashlib.sha256(raw.encode()).hexdigest()
     return raw, hashed
 
 
 def hash_refresh_token(raw: str) -> str:
+    """SHA-256 хеш refresh-токена для поиска в БД."""
     return hashlib.sha256(raw.encode()).hexdigest()

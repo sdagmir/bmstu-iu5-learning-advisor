@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Query
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,3 +45,7 @@ async def get_current_admin(
 
 CurrentUser = Annotated["User", Depends(get_current_user)]
 CurrentAdmin = Annotated["User", Depends(get_current_admin)]
+
+# Пагинация
+PageOffset = Annotated[int, Query(ge=0, description="Смещение (offset)")]
+PageLimit = Annotated[int, Query(ge=1, le=100, description="Количество записей")]

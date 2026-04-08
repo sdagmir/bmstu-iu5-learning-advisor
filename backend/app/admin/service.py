@@ -55,8 +55,15 @@ async def _load_competencies(db: AsyncSession, ids: list[uuid.UUID]) -> list[Com
 
 
 class CompetencyService:
-    async def list(self, db: AsyncSession) -> list[Competency]:
-        result = await db.execute(select(Competency).order_by(Competency.category, Competency.tag))
+    async def list(
+        self, db: AsyncSession, *, offset: int = 0, limit: int = 50
+    ) -> list[Competency]:
+        result = await db.execute(
+            select(Competency)
+            .order_by(Competency.category, Competency.tag)
+            .offset(offset)
+            .limit(limit)
+        )
         return list(result.scalars().all())
 
     async def get(self, competency_id: uuid.UUID, db: AsyncSession) -> Competency:
@@ -91,11 +98,15 @@ class CompetencyService:
 
 
 class DisciplineService:
-    async def list(self, db: AsyncSession) -> list[Discipline]:
+    async def list(
+        self, db: AsyncSession, *, offset: int = 0, limit: int = 50
+    ) -> list[Discipline]:
         result = await db.execute(
             select(Discipline)
             .options(selectinload(Discipline.competencies))
             .order_by(Discipline.semester, Discipline.name)
+            .offset(offset)
+            .limit(limit)
         )
         return list(result.scalars().unique().all())
 
@@ -147,11 +158,13 @@ class DisciplineService:
 
 
 class CKCourseService:
-    async def list(self, db: AsyncSession) -> list[CKCourse]:
+    async def list(self, db: AsyncSession, *, offset: int = 0, limit: int = 50) -> list[CKCourse]:
         result = await db.execute(
             select(CKCourse)
             .options(selectinload(CKCourse.competencies), selectinload(CKCourse.prerequisites))
             .order_by(CKCourse.category, CKCourse.name)
+            .offset(offset)
+            .limit(limit)
         )
         return list(result.scalars().unique().all())
 
@@ -202,11 +215,15 @@ class CKCourseService:
 
 
 class CareerDirectionService:
-    async def list(self, db: AsyncSession) -> list[CareerDirection]:
+    async def list(
+        self, db: AsyncSession, *, offset: int = 0, limit: int = 50
+    ) -> list[CareerDirection]:
         result = await db.execute(
             select(CareerDirection)
             .options(selectinload(CareerDirection.competencies))
             .order_by(CareerDirection.name)
+            .offset(offset)
+            .limit(limit)
         )
         return list(result.scalars().unique().all())
 
@@ -255,8 +272,12 @@ class CareerDirectionService:
 
 
 class FocusAdviceService:
-    async def list(self, db: AsyncSession) -> list[FocusAdvice]:
-        result = await db.execute(select(FocusAdvice).order_by(FocusAdvice.discipline_id))
+    async def list(
+        self, db: AsyncSession, *, offset: int = 0, limit: int = 50
+    ) -> list[FocusAdvice]:
+        result = await db.execute(
+            select(FocusAdvice).order_by(FocusAdvice.discipline_id).offset(offset).limit(limit)
+        )
         return list(result.scalars().all())
 
     async def get(self, advice_id: uuid.UUID, db: AsyncSession) -> FocusAdvice:
@@ -296,8 +317,8 @@ class FocusAdviceService:
 
 
 class RuleService:
-    async def list(self, db: AsyncSession) -> list[Rule]:
-        result = await db.execute(select(Rule).order_by(Rule.number))
+    async def list(self, db: AsyncSession, *, offset: int = 0, limit: int = 100) -> list[Rule]:
+        result = await db.execute(select(Rule).order_by(Rule.number).offset(offset).limit(limit))
         return list(result.scalars().all())
 
     async def get(self, rule_id: uuid.UUID, db: AsyncSession) -> Rule:

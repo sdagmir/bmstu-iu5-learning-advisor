@@ -56,7 +56,7 @@ class TestAccessToken:
 class TestRefreshToken:
     def test_create_returns_pair(self) -> None:
         raw, hashed = create_refresh_token()
-        assert len(raw) == 64  # две uuid4 hex-строки
+        assert len(raw) == 64  # secrets.token_hex(32)
         assert len(hashed) == 64  # sha256 hex
 
     def test_hash_is_deterministic(self) -> None:

@@ -29,6 +29,15 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Инициализация и завершение инфраструктурных клиентов."""
     logger.info("Starting application")
+
+    # Восстановление BM25 корпуса из Qdrant
+    try:
+        from app.rag.service import rag_service
+
+        rag_service.restore_bm25_from_qdrant()
+    except Exception:
+        logger.warning("Не удалось восстановить BM25, RAG поиск будет без sparse")
+
     yield
     logger.info("Shutdown complete")
 

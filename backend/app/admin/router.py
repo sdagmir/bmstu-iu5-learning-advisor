@@ -1,3 +1,5 @@
+"""Роутер админки — CRUD для всех сущностей. Все эндпоинты требуют роль admin."""
+
 from __future__ import annotations
 
 import uuid
@@ -32,7 +34,7 @@ from app.admin.service import (
     focus_advice_service,
     rule_service,
 )
-from app.dependencies import CurrentAdmin, DbSession
+from app.dependencies import CurrentAdmin, DbSession, PageLimit, PageOffset
 
 router = APIRouter()
 
@@ -41,8 +43,10 @@ router = APIRouter()
 
 
 @router.get("/competencies", response_model=list[CompetencyRead])
-async def list_competencies(admin: CurrentAdmin, db: DbSession) -> list[CompetencyRead]:
-    items = await competency_service.list(db)
+async def list_competencies(
+    admin: CurrentAdmin, db: DbSession, offset: PageOffset = 0, limit: PageLimit = 50
+) -> list[CompetencyRead]:
+    items = await competency_service.list(db, offset=offset, limit=limit)
     return [CompetencyRead.model_validate(i) for i in items]
 
 
@@ -71,8 +75,10 @@ async def delete_competency(competency_id: uuid.UUID, admin: CurrentAdmin, db: D
 
 
 @router.get("/disciplines", response_model=list[DisciplineRead])
-async def list_disciplines(admin: CurrentAdmin, db: DbSession) -> list[DisciplineRead]:
-    items = await discipline_service.list(db)
+async def list_disciplines(
+    admin: CurrentAdmin, db: DbSession, offset: PageOffset = 0, limit: PageLimit = 50
+) -> list[DisciplineRead]:
+    items = await discipline_service.list(db, offset=offset, limit=limit)
     return [DisciplineRead.model_validate(i) for i in items]
 
 
@@ -101,8 +107,10 @@ async def delete_discipline(discipline_id: uuid.UUID, admin: CurrentAdmin, db: D
 
 
 @router.get("/ck-courses", response_model=list[CKCourseRead])
-async def list_ck_courses(admin: CurrentAdmin, db: DbSession) -> list[CKCourseRead]:
-    items = await ck_course_service.list(db)
+async def list_ck_courses(
+    admin: CurrentAdmin, db: DbSession, offset: PageOffset = 0, limit: PageLimit = 50
+) -> list[CKCourseRead]:
+    items = await ck_course_service.list(db, offset=offset, limit=limit)
     return [CKCourseRead.model_validate(i) for i in items]
 
 
@@ -131,8 +139,10 @@ async def delete_ck_course(course_id: uuid.UUID, admin: CurrentAdmin, db: DbSess
 
 
 @router.get("/career-directions", response_model=list[CareerDirectionRead])
-async def list_career_directions(admin: CurrentAdmin, db: DbSession) -> list[CareerDirectionRead]:
-    items = await career_direction_service.list(db)
+async def list_career_directions(
+    admin: CurrentAdmin, db: DbSession, offset: PageOffset = 0, limit: PageLimit = 50
+) -> list[CareerDirectionRead]:
+    items = await career_direction_service.list(db, offset=offset, limit=limit)
     return [CareerDirectionRead.model_validate(i) for i in items]
 
 
@@ -163,8 +173,10 @@ async def delete_career_direction(
 
 
 @router.get("/focus-advices", response_model=list[FocusAdviceRead])
-async def list_focus_advices(admin: CurrentAdmin, db: DbSession) -> list[FocusAdviceRead]:
-    items = await focus_advice_service.list(db)
+async def list_focus_advices(
+    admin: CurrentAdmin, db: DbSession, offset: PageOffset = 0, limit: PageLimit = 50
+) -> list[FocusAdviceRead]:
+    items = await focus_advice_service.list(db, offset=offset, limit=limit)
     return [FocusAdviceRead.model_validate(i) for i in items]
 
 
@@ -193,8 +205,10 @@ async def delete_focus_advice(advice_id: uuid.UUID, admin: CurrentAdmin, db: DbS
 
 
 @router.get("/rules", response_model=list[RuleRead])
-async def list_rules(admin: CurrentAdmin, db: DbSession) -> list[RuleRead]:
-    items = await rule_service.list(db)
+async def list_rules(
+    admin: CurrentAdmin, db: DbSession, offset: PageOffset = 0, limit: PageLimit = 100
+) -> list[RuleRead]:
+    items = await rule_service.list(db, offset=offset, limit=limit)
     return [RuleRead.model_validate(i) for i in items]
 
 
