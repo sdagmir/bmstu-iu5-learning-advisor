@@ -156,22 +156,42 @@ class FocusAdviceRead(BaseModel):
 # ── Правила ЭС ──────────────────────────────────────────────────────────────
 
 
+class RuleCreate(BaseModel):
+    """Создание нового правила ЭС."""
+
+    number: int = Field(ge=1)
+    group: RuleGroup
+    name: str = Field(max_length=255)
+    description: str = ""
+    condition: dict
+    recommendation: dict
+    priority: int = 0
+    is_active: bool = True
+
+
+class RuleUpdate(BaseModel):
+    """Обновление правила ЭС. Все поля опциональны."""
+
+    group: RuleGroup | None = None
+    name: str | None = Field(default=None, max_length=255)
+    description: str | None = None
+    condition: dict | None = None
+    recommendation: dict | None = None
+    priority: int | None = None
+    is_active: bool | None = None
+
+
 class RuleRead(BaseModel):
-    """Правило ЭС — только чтение и переключение is_active."""
+    """Правило ЭС — полное представление."""
 
     id: uuid.UUID
     number: int
     group: RuleGroup
     name: str
-    input_params: list[str]
-    output_param: str
-    condition_text: str
-    action_text: str
+    description: str
+    condition: dict
+    recommendation: dict
     priority: int
     is_active: bool
 
     model_config = {"from_attributes": True}
-
-
-class RuleToggle(BaseModel):
-    is_active: bool

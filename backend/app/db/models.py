@@ -272,16 +272,17 @@ class CareerDirection(Base):
 
 
 class Rule(Base):
+    """Правило экспертной системы. Хранит условия и рекомендацию в JSON."""
+
     __tablename__ = "rules"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     number: Mapped[int] = mapped_column(Integer, unique=True)
     group: Mapped[RuleGroup] = mapped_column(Enum(RuleGroup))
     name: Mapped[str] = mapped_column(String(255))
-    input_params: Mapped[list[str]] = mapped_column(JSON, default=list)
-    output_param: Mapped[str] = mapped_column(String(10))
-    condition_text: Mapped[str] = mapped_column(Text)
-    action_text: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text, default="")
+    condition: Mapped[dict] = mapped_column(JSON)
+    recommendation: Mapped[dict] = mapped_column(JSON)
     priority: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 

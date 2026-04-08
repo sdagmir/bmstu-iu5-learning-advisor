@@ -9,14 +9,16 @@ from app.db.models import (
     TechparkStatus,
     WorkloadPref,
 )
-from app.expert.engine import PythonRuleEngine
+from app.expert.engine import PythonRuleEngine, RuleData
+from app.expert.rules_data import get_all_rules
 from app.expert.schemas import CKDevStatus, CoverageLevel, StudentProfile
 from tests.conftest import make_profile
 
 
 @pytest.fixture
 def engine() -> PythonRuleEngine:
-    return PythonRuleEngine()
+    rules = [RuleData(**r) for r in get_all_rules()]
+    return PythonRuleEngine(rules=rules)
 
 
 # ── Сценарий 1: ML-новичок, 4-й семестр ─────────────────────────────────────

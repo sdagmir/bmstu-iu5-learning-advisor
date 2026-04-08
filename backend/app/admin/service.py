@@ -30,6 +30,8 @@ if TYPE_CHECKING:
         DisciplineUpdate,
         FocusAdviceCreate,
         FocusAdviceUpdate,
+        RuleCreate,
+        RuleUpdate,
     )
 
 
@@ -298,14 +300,39 @@ class RuleService:
         result = await db.execute(select(Rule).order_by(Rule.number))
         return list(result.scalars().all())
 
-    async def toggle(self, rule_id: uuid.UUID, is_active: bool, db: AsyncSession) -> Rule:
+    async def get(self, rule_id: uuid.UUID, db: AsyncSession) -> Rule:
         result = await db.execute(select(Rule).where(Rule.id == rule_id))
         rule = result.scalar_one_or_none()
         if rule is None:
             raise NotFoundError("Rule", str(rule_id))
-        rule.is_active = is_active
+        return rule
+
+    async def create(self, data: RuleCreate, db: AsyncSession) -> Rule:
+        rule = Rule(
+            number=data.number,
+            group=data.group,
+            name=data.name,
+            description=data.description,
+            condition=data.condition,
+            recommendation=data.recommendation,
+            priority=data.priority,
+            is_active=data.is_active,
+        )
+        db.add(rule)
         await db.flush()
         return rule
+
+    async def update(self, rule_id: uuid.UUID, data: RuleUpdate, db: AsyncSession) -> Rule:
+        rule = await self.get(rule_id, db)
+        for field, value in data.model_dump(exclude_unset=True).items():
+            setattr(rule, field, value)
+        await db.flush()
+        return rule
+
+    async def delete(self, rule_id: uuid.UUID, db: AsyncSession) -> None:
+        rule = await self.get(rule_id, db)
+        await db.delete(rule)
+        await db.flush()
 
 
 # ── Синглтоны сервисов ───────────────────────────────────────────────────────

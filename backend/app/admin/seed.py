@@ -310,6 +310,30 @@ async def seed_ck_courses(db: AsyncSession, tag_map: dict[str, Competency]) -> N
     await db.flush()
 
 
+async def seed_rules(db: AsyncSession) -> None:
+    """Сидирование 52 правил ЭС из rules_data."""
+    from app.db.models import Rule
+    from app.expert.rules_data import get_all_rules
+
+    logger.info("Сидирование правил ЭС...")
+    for rule_data in get_all_rules():
+        result = await db.execute(select(Rule).where(Rule.number == rule_data["number"]))
+        if result.scalar_one_or_none() is not None:
+            continue
+        rule = Rule(
+            number=rule_data["number"],
+            group=rule_data["group"],
+            name=rule_data["name"],
+            description=rule_data.get("description", ""),
+            condition=rule_data["condition"],
+            recommendation=rule_data["recommendation"],
+            priority=rule_data.get("priority", 0),
+        )
+        db.add(rule)
+        logger.info("  + правило R%d: %s", rule_data["number"], rule_data["name"])
+    await db.flush()
+
+
 async def run_seed() -> None:
     """Запуск полного сидирования."""
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -320,6 +344,7 @@ async def run_seed() -> None:
             tag_map = await seed_competencies(db)
             await seed_career_directions(db, tag_map)
             await seed_ck_courses(db, tag_map)
+            await seed_rules(db)
             await db.commit()
             logger.info("=== Сидирование завершено ===")
         except Exception:

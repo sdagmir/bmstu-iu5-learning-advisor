@@ -38,6 +38,7 @@ ignore = ["RUF001", "RUF002", "RUF003"]
 "app/*/router.py" = ["TCH"]
 "app/*/schemas.py" = ["TCH"]
 "app/db/models.py" = ["TCH"]
+"app/expert/rules_data.py" = ["E501"]
 "tests/**" = ["ANN"]
 
 [tool.ruff.lint.isort]

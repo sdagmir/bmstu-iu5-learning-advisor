@@ -20,8 +20,9 @@ from app.admin.schemas import (
     FocusAdviceCreate,
     FocusAdviceRead,
     FocusAdviceUpdate,
+    RuleCreate,
     RuleRead,
-    RuleToggle,
+    RuleUpdate,
 )
 from app.admin.service import (
     career_direction_service,
@@ -197,9 +198,20 @@ async def list_rules(admin: CurrentAdmin, db: DbSession) -> list[RuleRead]:
     return [RuleRead.model_validate(i) for i in items]
 
 
-@router.patch("/rules/{rule_id}", response_model=RuleRead)
-async def toggle_rule(
-    rule_id: uuid.UUID, body: RuleToggle, admin: CurrentAdmin, db: DbSession
-) -> RuleRead:
-    item = await rule_service.toggle(rule_id, body.is_active, db)
+@router.post("/rules", response_model=RuleRead, status_code=201)
+async def create_rule(body: RuleCreate, admin: CurrentAdmin, db: DbSession) -> RuleRead:
+    item = await rule_service.create(body, db)
     return RuleRead.model_validate(item)
+
+
+@router.patch("/rules/{rule_id}", response_model=RuleRead)
+async def update_rule(
+    rule_id: uuid.UUID, body: RuleUpdate, admin: CurrentAdmin, db: DbSession
+) -> RuleRead:
+    item = await rule_service.update(rule_id, body, db)
+    return RuleRead.model_validate(item)
+
+
+@router.delete("/rules/{rule_id}", status_code=204)
+async def delete_rule(rule_id: uuid.UUID, admin: CurrentAdmin, db: DbSession) -> None:
+    await rule_service.delete(rule_id, db)
