@@ -1,32 +1,67 @@
 # admin — Административный модуль
 
 ## Что делает
-CRUD для всех данных системы. Все эндпоинты требуют роль `admin`.
+
+Полный CRUD для всех данных системы + управление пользователями.
+Все эндпоинты требуют роль `admin`.
 
 ## Сущности
 
-| Сущность | Операции | Описание |
-|----------|----------|----------|
-| Competencies | CRUD | 38 тегов компетенций |
-| Disciplines | CRUD | Дисциплины учебного плана (8 семестров) |
-| CK Courses | CRUD | 20 программ цифровой кафедры + компетенции + пререквизиты |
-| Career Directions | CRUD | 10 карьерных направлений + целевые профили |
-| Focus Advices | CRUD | Таблица фокусов (дисциплина × направление → совет) |
-| Rules | CRUD | 52 правила ЭС в JSON-формате |
+| Сущность | Операции | Кол-во в seed | Описание |
+|----------|----------|---------------|----------|
+| Users | R, U | -- | Список пользователей, смена роли/блокировка |
+| Competencies | CRUD | 38 | Теги компетенций (8 категорий) |
+| Disciplines | CRUD | 64 | Учебный план ИУ5 (8 семестров) |
+| CK Courses | CRUD | 20 | Программы цифровой кафедры (2 е.з.) |
+| Career Directions | CRUD | 10 | Направления + целевые профили компетенций |
+| Focus Advices | CRUD | -- | Фокусы (дисциплина x направление -> совет) |
+| Rules | CRUD | 52 | Правила ЭС в JSON |
 
-## Seed-скрипт
-```bash
-python -m app.admin.seed
+## Seed-данные в JSON
+
 ```
-Идемпотентный — загружает начальные данные из документации:
-- 38 компетенций, 10 направлений, 20 курсов ЦК, 52 правила ЭС
+seed_data/
+  competencies.json       -- 38 тегов (8 категорий)
+  career_directions.json  -- 10 направлений + example_jobs
+  disciplines.json        -- 64 дисциплины учебного плана ИУ5
+  ck_courses.json         -- 20 программ ЦК (description -> для RAG позже)
+```
+
+```bash
+python -m app.admin.seed   # идемпотентный, пропускает существующие
+```
+
+Seed = начальное наполнение. Дальше все через Admin API.
 
 ## M:N связи
-Дисциплины, курсы ЦК и направления привязываются к компетенциям через `competency_ids` в запросе.
-Курсы ЦК дополнительно имеют `prerequisite_ids` (пререквизиты).
+
+Дисциплины, ЦК и направления привязываются к компетенциям через `competency_ids`.
+ЦК дополнительно имеют `prerequisite_ids` (пререквизиты).
+При PATCH `competency_ids` **заменяет** весь список (не добавляет).
+
+## Пагинация
+
+Все списки: `offset` (default 0) + `limit` (default 50, max 100).
+Нет total_count -- конец списка: `len(result) < limit`.
+
+## API (31 эндпоинт)
+
+| Группа | Методы | Путь |
+|--------|--------|------|
+| Users | GET, GET/{id}, PATCH/{id} | `/admin/users` |
+| Competencies | GET, POST, PATCH/{id}, DELETE/{id} | `/admin/competencies` |
+| Disciplines | GET, POST, PATCH/{id}, DELETE/{id} | `/admin/disciplines` |
+| CK Courses | GET, POST, PATCH/{id}, DELETE/{id} | `/admin/ck-courses` |
+| Career Directions | GET, POST, PATCH/{id}, DELETE/{id} | `/admin/career-directions` |
+| Focus Advices | GET, POST, PATCH/{id}, DELETE/{id} | `/admin/focus-advices` |
+| Rules | GET, POST, PATCH/{id}, DELETE/{id} | `/admin/rules` |
 
 ## Файлы
-- `schemas.py` — Create/Read/Update модели для всех сущностей
-- `service.py` — CRUD-сервисы
-- `router.py` — 26 эндпоинтов
-- `seed.py` — начальное наполнение БД
+
+| Файл | Описание |
+|------|----------|
+| `schemas.py` | Create/Read/Update для всех сущностей + UserAdminRead/Update |
+| `service.py` | CRUD-сервисы (7 классов) |
+| `router.py` | 31 HTTP-эндпоинт |
+| `seed.py` | Загрузка из JSON, идемпотентный |
+| `seed_data/` | JSON-файлы с начальными данными |
