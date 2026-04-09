@@ -1,0 +1,47 @@
+[
+  {"tag": "python", "name": "Программирование на Python", "category": "programming"},
+  {"tag": "cpp", "name": "Программирование на C/C++", "category": "programming"},
+  {"tag": "javascript", "name": "Программирование на JavaScript", "category": "programming"},
+  {"tag": "git", "name": "Системы контроля версий (Git)", "category": "programming"},
+  {"tag": "linux", "name": "Администрирование Linux", "category": "programming"},
+  {"tag": "algorithms", "name": "Алгоритмы и структуры данных", "category": "programming"},
+
+  {"tag": "linear_algebra", "name": "Линейная алгебра", "category": "math"},
+  {"tag": "calculus", "name": "Математический анализ", "category": "math"},
+  {"tag": "discrete_math", "name": "Дискретная математика", "category": "math"},
+  {"tag": "probability", "name": "Теория вероятностей", "category": "math"},
+  {"tag": "statistics", "name": "Математическая статистика", "category": "math"},
+
+  {"tag": "sql", "name": "Базы данных и SQL", "category": "data"},
+  {"tag": "db_design", "name": "Проектирование баз данных", "category": "data"},
+  {"tag": "data_analysis", "name": "Анализ данных", "category": "data"},
+  {"tag": "data_visualization", "name": "Визуализация данных", "category": "data"},
+
+  {"tag": "ml_basics", "name": "Машинное обучение (базовое)", "category": "ml"},
+  {"tag": "deep_learning", "name": "Нейронные сети и глубокое обучение", "category": "ml"},
+  {"tag": "nlp", "name": "Обработка естественного языка", "category": "ml"},
+  {"tag": "computer_vision", "name": "Компьютерное зрение", "category": "ml"},
+
+  {"tag": "oop", "name": "Объектно-ориентированное программирование", "category": "engineering"},
+  {"tag": "design_patterns", "name": "Паттерны проектирования", "category": "engineering"},
+  {"tag": "api_design", "name": "Проектирование REST API", "category": "engineering"},
+  {"tag": "docker", "name": "Контейнеризация (Docker)", "category": "engineering"},
+  {"tag": "ci_cd", "name": "Непрерывная интеграция и доставка", "category": "engineering"},
+  {"tag": "testing", "name": "Тестирование ПО", "category": "engineering"},
+  {"tag": "software_architecture", "name": "Архитектура ПО", "category": "engineering"},
+
+  {"tag": "networking", "name": "Компьютерные сети", "category": "networks"},
+  {"tag": "network_protocols", "name": "Сетевые протоколы", "category": "networks"},
+  {"tag": "cryptography", "name": "Криптография", "category": "networks"},
+  {"tag": "pentesting", "name": "Тестирование на проникновение", "category": "networks"},
+  {"tag": "network_security", "name": "Сетевая безопасность", "category": "networks"},
+
+  {"tag": "computer_architecture", "name": "Архитектура ЭВМ", "category": "system"},
+  {"tag": "operating_systems", "name": "Операционные системы", "category": "system"},
+  {"tag": "parallel_computing", "name": "Параллельное программирование", "category": "system"},
+
+  {"tag": "mobile_dev", "name": "Мобильная разработка", "category": "applied"},
+  {"tag": "frontend", "name": "Фронтенд-разработка", "category": "applied"},
+  {"tag": "ux_design", "name": "UX/UI проектирование", "category": "applied"},
+  {"tag": "game_dev", "name": "Разработка игр", "category": "applied"}
+]

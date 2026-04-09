@@ -1,0 +1,162 @@
+[
+  {
+    "name": "Инженер машинного обучения",
+    "category": "ml",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["ml_basics", "python", "data_analysis"],
+    "prerequisite_tags": ["probability", "python", "linear_algebra"]
+  },
+  {
+    "name": "Промпт-инженер",
+    "category": "ml",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["ml_basics", "nlp"],
+    "prerequisite_tags": ["ml_basics", "linear_algebra"]
+  },
+  {
+    "name": "Инженер автоматизации разработки и эксплуатации",
+    "category": "development",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["docker", "ci_cd", "linux"],
+    "prerequisite_tags": ["python"]
+  },
+  {
+    "name": "Обеспечение информационной безопасности",
+    "category": "security",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["cryptography", "network_security"],
+    "prerequisite_tags": []
+  },
+  {
+    "name": "Тестирование на проникновение",
+    "category": "security",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["pentesting", "network_security"],
+    "prerequisite_tags": ["networking", "linux"]
+  },
+  {
+    "name": "Инженер по безопасности приложений",
+    "category": "security",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["network_security", "testing"],
+    "prerequisite_tags": ["python", "git", "linux"]
+  },
+  {
+    "name": "Разработчик пользовательских интерфейсов",
+    "category": "development",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["frontend", "javascript"],
+    "prerequisite_tags": ["git", "linux"]
+  },
+  {
+    "name": "Дизайнер пользовательских интерфейсов",
+    "category": "development",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["ux_design", "frontend"],
+    "prerequisite_tags": []
+  },
+  {
+    "name": "Разработка компьютерных игр",
+    "category": "development",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["cpp", "algorithms"],
+    "prerequisite_tags": ["oop"]
+  },
+  {
+    "name": "Разработка на C и C++",
+    "category": "development",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["cpp", "algorithms"],
+    "prerequisite_tags": []
+  },
+  {
+    "name": "Инженер-разработчик встраиваемых систем",
+    "category": "development",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["cpp", "computer_architecture"],
+    "prerequisite_tags": []
+  },
+  {
+    "name": "Архитектор платёжных сервисов",
+    "category": "development",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["software_architecture", "api_design"],
+    "prerequisite_tags": ["python", "sql"]
+  },
+  {
+    "name": "Системный аналитик",
+    "category": "management",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["db_design", "software_architecture"],
+    "prerequisite_tags": ["algorithms", "discrete_math"]
+  },
+  {
+    "name": "Инженер по тестированию производительности",
+    "category": "testing",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["testing", "python"],
+    "prerequisite_tags": ["oop", "sql", "networking"]
+  },
+  {
+    "name": "Цифровые навыки",
+    "category": "other",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["python", "git", "linux"],
+    "prerequisite_tags": []
+  },
+  {
+    "name": "Специалист по интернет-маркетингу",
+    "category": "management",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["data_analysis", "data_visualization"],
+    "prerequisite_tags": []
+  },
+  {
+    "name": "Руководитель продукта",
+    "category": "management",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["software_architecture", "ux_design"],
+    "prerequisite_tags": []
+  },
+  {
+    "name": "Программист 1С",
+    "category": "development",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["sql", "db_design"],
+    "prerequisite_tags": ["sql"]
+  },
+  {
+    "name": "Аналитик 1С",
+    "category": "management",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["sql", "data_analysis"],
+    "prerequisite_tags": ["sql"]
+  },
+  {
+    "name": "Low-code разработка",
+    "category": "development",
+    "credits": 2,
+    "description": null,
+    "competency_tags": ["api_design", "db_design"],
+    "prerequisite_tags": []
+  }
+]

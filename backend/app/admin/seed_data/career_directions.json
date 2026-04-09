@@ -1,0 +1,62 @@
+[
+  {
+    "name": "ML / Data Science",
+    "description": "Машинное обучение, анализ данных, нейронные сети",
+    "example_jobs": "ML Engineer, Data Scientist, Research Engineer",
+    "competency_tags": ["python", "linear_algebra", "probability", "statistics", "ml_basics", "deep_learning", "data_analysis", "sql"]
+  },
+  {
+    "name": "Бэкенд-разработка",
+    "description": "Серверная разработка, API, базы данных, DevOps",
+    "example_jobs": "Backend Developer, Software Engineer, DevOps Engineer",
+    "competency_tags": ["python", "oop", "design_patterns", "sql", "db_design", "api_design", "docker", "ci_cd", "software_architecture", "git", "linux"]
+  },
+  {
+    "name": "Фронтенд-разработка",
+    "description": "Клиентская веб-разработка, интерфейсы, SPA",
+    "example_jobs": "Frontend Developer, UI Engineer, Fullstack Developer",
+    "competency_tags": ["javascript", "frontend", "ux_design", "git", "api_design", "testing"]
+  },
+  {
+    "name": "Кибербезопасность",
+    "description": "Информационная безопасность, пентест, криптография",
+    "example_jobs": "Security Engineer, Pentester, SOC Analyst",
+    "competency_tags": ["networking", "network_protocols", "cryptography", "pentesting", "network_security", "linux", "operating_systems"]
+  },
+  {
+    "name": "Системное программирование",
+    "description": "Низкоуровневая разработка, ОС, встраиваемые системы",
+    "example_jobs": "Systems Programmer, Embedded Developer, Kernel Engineer",
+    "competency_tags": ["cpp", "computer_architecture", "operating_systems", "parallel_computing", "linux", "algorithms"]
+  },
+  {
+    "name": "DevOps / Инфраструктура",
+    "description": "Автоматизация, CI/CD, контейнеризация, мониторинг",
+    "example_jobs": "DevOps Engineer, SRE, Platform Engineer",
+    "competency_tags": ["linux", "docker", "ci_cd", "networking", "python", "git", "software_architecture"]
+  },
+  {
+    "name": "Мобильная разработка",
+    "description": "Разработка приложений для мобильных платформ",
+    "example_jobs": "iOS Developer, Android Developer, Flutter Developer",
+    "competency_tags": ["mobile_dev", "oop", "design_patterns", "api_design", "ux_design", "git", "testing"]
+  },
+  {
+    "name": "Геймдев",
+    "description": "Разработка компьютерных игр, игровые движки",
+    "example_jobs": "Game Developer, Game Engine Programmer, Technical Artist",
+    "competency_tags": ["cpp", "oop", "algorithms", "linear_algebra", "design_patterns"]
+  },
+  {
+    "name": "QA / Тестирование",
+    "description": "Тестирование ПО, автоматизация тестов",
+    "example_jobs": "QA Engineer, SDET, Test Automation Engineer",
+    "competency_tags": ["testing", "python", "sql", "api_design", "git", "linux", "ci_cd"]
+  },
+  {
+    "name": "Аналитика данных / BI",
+    "description": "Анализ данных, визуализация, статистика",
+    "example_jobs": "Data Analyst, BI Developer, Analytics Engineer",
+    "competency_tags": ["sql", "python", "data_analysis", "data_visualization", "statistics", "probability"]
+  }
+]

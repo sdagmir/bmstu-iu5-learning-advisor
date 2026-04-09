@@ -1,7 +1,9 @@
-"""Скрипт начального наполнения БД данными из документации.
+"""Скрипт начального наполнения БД данными из JSON-файлов.
 
 Запуск на сервере: python -m app.admin.seed
 Идемпотентный — пропускает уже существующие записи по уникальным полям.
+Данные хранятся в seed_data/*.json для наглядности и удобства редактирования.
+После сидирования всё управляется через Admin API.
 """
 
 from __future__ import annotations
@@ -25,311 +27,85 @@ from app.db.models import (
     DisciplineType,
 )
 
+logger = logging.getLogger(__name__)
 SEED_DATA_DIR = Path(__file__).parent / "seed_data"
 
-logger = logging.getLogger(__name__)
 
-# ── 38 тегов компетенций (из документации, таблица 3) ────────────────────────
-
-COMPETENCIES = [
-    # Программирование
-    ("python", "Программирование на Python", CompetencyCategory.PROGRAMMING),
-    ("cpp", "Программирование на C/C++", CompetencyCategory.PROGRAMMING),
-    ("javascript", "Программирование на JavaScript", CompetencyCategory.PROGRAMMING),
-    ("git", "Системы контроля версий (Git)", CompetencyCategory.PROGRAMMING),
-    ("linux", "Администрирование Linux", CompetencyCategory.PROGRAMMING),
-    ("algorithms", "Алгоритмы и структуры данных", CompetencyCategory.PROGRAMMING),
-    # Математика
-    ("linear_algebra", "Линейная алгебра", CompetencyCategory.MATH),
-    ("calculus", "Математический анализ", CompetencyCategory.MATH),
-    ("discrete_math", "Дискретная математика", CompetencyCategory.MATH),
-    ("probability", "Теория вероятностей", CompetencyCategory.MATH),
-    ("statistics", "Математическая статистика", CompetencyCategory.MATH),
-    # Данные
-    ("sql", "Базы данных и SQL", CompetencyCategory.DATA),
-    ("db_design", "Проектирование баз данных", CompetencyCategory.DATA),
-    ("data_analysis", "Анализ данных", CompetencyCategory.DATA),
-    ("data_visualization", "Визуализация данных", CompetencyCategory.DATA),
-    # Машинное обучение
-    ("ml_basics", "Машинное обучение (базовое)", CompetencyCategory.ML),
-    ("deep_learning", "Нейронные сети и глубокое обучение", CompetencyCategory.ML),
-    ("nlp", "Обработка естественного языка", CompetencyCategory.ML),
-    ("computer_vision", "Компьютерное зрение", CompetencyCategory.ML),
-    # Инженерия ПО
-    ("oop", "Объектно-ориентированное программирование", CompetencyCategory.ENGINEERING),
-    ("design_patterns", "Паттерны проектирования", CompetencyCategory.ENGINEERING),
-    ("api_design", "Проектирование REST API", CompetencyCategory.ENGINEERING),
-    ("docker", "Контейнеризация (Docker)", CompetencyCategory.ENGINEERING),
-    ("ci_cd", "Непрерывная интеграция и доставка", CompetencyCategory.ENGINEERING),
-    ("testing", "Тестирование ПО", CompetencyCategory.ENGINEERING),
-    ("software_architecture", "Архитектура ПО", CompetencyCategory.ENGINEERING),
-    # Сети и безопасность
-    ("networking", "Компьютерные сети", CompetencyCategory.NETWORKS),
-    ("network_protocols", "Сетевые протоколы", CompetencyCategory.NETWORKS),
-    ("cryptography", "Криптография", CompetencyCategory.NETWORKS),
-    ("pentesting", "Тестирование на проникновение", CompetencyCategory.NETWORKS),
-    ("network_security", "Сетевая безопасность", CompetencyCategory.NETWORKS),
-    # Системное ПО
-    ("computer_architecture", "Архитектура ЭВМ", CompetencyCategory.SYSTEM),
-    ("operating_systems", "Операционные системы", CompetencyCategory.SYSTEM),
-    ("parallel_computing", "Параллельное программирование", CompetencyCategory.SYSTEM),
-    # Прикладное
-    ("mobile_dev", "Мобильная разработка", CompetencyCategory.APPLIED),
-    ("frontend", "Фронтенд-разработка", CompetencyCategory.APPLIED),
-    ("ux_design", "UX/UI проектирование", CompetencyCategory.APPLIED),
-    ("game_dev", "Разработка игр", CompetencyCategory.APPLIED),
-]
-
-# ── 10 карьерных направлений (из документации, таблица 7) ─────────────────────
-
-CAREER_DIRECTIONS = [
-    (
-        "ML / Data Science",
-        "Машинное обучение, анализ данных, нейронные сети",
-        [
-            "python",
-            "linear_algebra",
-            "probability",
-            "statistics",
-            "ml_basics",
-            "deep_learning",
-            "data_analysis",
-            "sql",
-        ],
-    ),
-    (
-        "Бэкенд-разработка",
-        "Серверная разработка, API, базы данных, DevOps",
-        [
-            "python",
-            "oop",
-            "design_patterns",
-            "sql",
-            "db_design",
-            "api_design",
-            "docker",
-            "ci_cd",
-            "software_architecture",
-            "git",
-            "linux",
-        ],
-    ),
-    (
-        "Фронтенд-разработка",
-        "Клиентская веб-разработка, интерфейсы, SPA",
-        ["javascript", "frontend", "ux_design", "git", "api_design", "testing"],
-    ),
-    (
-        "Кибербезопасность",
-        "Информационная безопасность, пентест, криптография",
-        [
-            "networking",
-            "network_protocols",
-            "cryptography",
-            "pentesting",
-            "network_security",
-            "linux",
-            "operating_systems",
-        ],
-    ),
-    (
-        "Системное программирование",
-        "Низкоуровневая разработка, ОС, встраиваемые системы",
-        [
-            "cpp",
-            "computer_architecture",
-            "operating_systems",
-            "parallel_computing",
-            "linux",
-            "algorithms",
-        ],
-    ),
-    (
-        "DevOps / Инфраструктура",
-        "Автоматизация, CI/CD, контейнеризация, мониторинг",
-        ["linux", "docker", "ci_cd", "networking", "python", "git", "software_architecture"],
-    ),
-    (
-        "Мобильная разработка",
-        "Разработка приложений для мобильных платформ",
-        ["mobile_dev", "oop", "design_patterns", "api_design", "ux_design", "git", "testing"],
-    ),
-    (
-        "Геймдев",
-        "Разработка компьютерных игр, игровые движки",
-        ["cpp", "oop", "algorithms", "linear_algebra", "design_patterns"],
-    ),
-    (
-        "QA / Тестирование",
-        "Тестирование ПО, автоматизация тестов",
-        ["testing", "python", "sql", "api_design", "git", "linux", "ci_cd"],
-    ),
-    (
-        "Аналитика данных / BI",
-        "Анализ данных, визуализация, статистика",
-        ["sql", "python", "data_analysis", "data_visualization", "statistics", "probability"],
-    ),
-]
-
-# ── 20 программ цифровой кафедры (из документации, таблица 10) ────────────────
-
-CK_COURSES_DATA = [
-    (
-        "Инженер машинного обучения",
-        CKCourseCategory.ML,
-        ["ml_basics", "python", "data_analysis"],
-        ["probability", "python", "linear_algebra"],
-    ),
-    ("Промпт-инженер", CKCourseCategory.ML, ["ml_basics", "nlp"], ["ml_basics", "linear_algebra"]),
-    (
-        "Инженер автоматизации разработки и эксплуатации",
-        CKCourseCategory.DEVELOPMENT,
-        ["docker", "ci_cd", "linux"],
-        ["python"],
-    ),
-    (
-        "Обеспечение информационной безопасности",
-        CKCourseCategory.SECURITY,
-        ["cryptography", "network_security"],
-        [],
-    ),
-    (
-        "Тестирование на проникновение",
-        CKCourseCategory.SECURITY,
-        ["pentesting", "network_security"],
-        ["networking", "linux"],
-    ),
-    (
-        "Инженер по безопасности приложений",
-        CKCourseCategory.SECURITY,
-        ["network_security", "testing"],
-        ["python", "git", "linux"],
-    ),
-    (
-        "Разработчик пользовательских интерфейсов",
-        CKCourseCategory.DEVELOPMENT,
-        ["frontend", "javascript"],
-        ["git", "linux"],
-    ),
-    (
-        "Дизайнер пользовательских интерфейсов",
-        CKCourseCategory.DEVELOPMENT,
-        ["ux_design", "frontend"],
-        [],
-    ),
-    ("Разработка компьютерных игр", CKCourseCategory.DEVELOPMENT, ["cpp", "algorithms"], ["oop"]),
-    ("Разработка на C и C++", CKCourseCategory.DEVELOPMENT, ["cpp", "algorithms"], []),
-    (
-        "Инженер-разработчик встраиваемых систем",
-        CKCourseCategory.DEVELOPMENT,
-        ["cpp", "computer_architecture"],
-        [],
-    ),
-    (
-        "Архитектор платёжных сервисов",
-        CKCourseCategory.DEVELOPMENT,
-        ["software_architecture", "api_design"],
-        ["python", "sql"],
-    ),
-    (
-        "Системный аналитик",
-        CKCourseCategory.MANAGEMENT,
-        ["db_design", "software_architecture"],
-        ["algorithms", "discrete_math"],
-    ),
-    (
-        "Инженер по тестированию производительности",
-        CKCourseCategory.TESTING,
-        ["testing", "python"],
-        ["oop", "sql", "networking"],
-    ),
-    ("Цифровые навыки", CKCourseCategory.OTHER, ["python", "git", "linux"], []),
-    (
-        "Специалист по интернет-маркетингу",
-        CKCourseCategory.MANAGEMENT,
-        ["data_analysis", "data_visualization"],
-        [],
-    ),
-    (
-        "Руководитель продукта",
-        CKCourseCategory.MANAGEMENT,
-        ["software_architecture", "ux_design"],
-        [],
-    ),
-    ("Программист 1С", CKCourseCategory.DEVELOPMENT, ["sql", "db_design"], ["sql"]),
-    ("Аналитик 1С", CKCourseCategory.MANAGEMENT, ["sql", "data_analysis"], ["sql"]),
-    ("Low-code разработка", CKCourseCategory.DEVELOPMENT, ["api_design", "db_design"], []),
-]
+def _load_json(filename: str) -> list[dict]:
+    """Загрузка данных из JSON-файла."""
+    with (SEED_DATA_DIR / filename).open(encoding="utf-8") as f:
+        return json.load(f)
 
 
-async def _get_or_create_competency(
-    db: AsyncSession, tag: str, name: str, category: CompetencyCategory
-) -> Competency:
-    """Получить существующую или создать новую компетенцию."""
-    result = await db.execute(select(Competency).where(Competency.tag == tag))
-    comp = result.scalar_one_or_none()
-    if comp is None:
-        comp = Competency(tag=tag, name=name, category=category)
-        db.add(comp)
-        await db.flush()
-        logger.info("  + компетенция: %s", tag)
-    return comp
+# ── Компетенции ────────────────────────────────────────────────────────────
 
 
 async def seed_competencies(db: AsyncSession) -> dict[str, Competency]:
-    """Сидирование 38 компетенций. Возвращает словарь tag → Competency."""
+    """Сидирование компетенций из competencies.json. Возвращает tag → Competency."""
     logger.info("Сидирование компетенций...")
+    data = _load_json("competencies.json")
     tag_map: dict[str, Competency] = {}
-    for tag, name, category in COMPETENCIES:
-        comp = await _get_or_create_competency(db, tag, name, category)
+
+    for item in data:
+        tag = item["tag"]
+        result = await db.execute(select(Competency).where(Competency.tag == tag))
+        comp = result.scalar_one_or_none()
+        if comp is None:
+            comp = Competency(
+                tag=tag,
+                name=item["name"],
+                category=CompetencyCategory(item["category"]),
+            )
+            db.add(comp)
+            await db.flush()
+            logger.info("  + компетенция: %s", tag)
         tag_map[tag] = comp
+
     logger.info("Компетенций в БД: %d", len(tag_map))
     return tag_map
 
 
+# ── Карьерные направления ──────────────────────────────────────────────────
+
+
 async def seed_career_directions(db: AsyncSession, tag_map: dict[str, Competency]) -> None:
-    """Сидирование 10 карьерных направлений с целевыми профилями."""
+    """Сидирование карьерных направлений из career_directions.json."""
     logger.info("Сидирование карьерных направлений...")
-    for name, description, comp_tags in CAREER_DIRECTIONS:
+    data = _load_json("career_directions.json")
+
+    for item in data:
+        name = item["name"]
         result = await db.execute(select(CareerDirection).where(CareerDirection.name == name))
         if result.scalar_one_or_none() is not None:
             continue
-        direction = CareerDirection(name=name, description=description)
-        direction.competencies = [tag_map[t] for t in comp_tags if t in tag_map]
+        direction = CareerDirection(
+            name=name,
+            description=item.get("description"),
+            example_jobs=item.get("example_jobs"),
+        )
+        direction.competencies = [
+            tag_map[t] for t in item.get("competency_tags", []) if t in tag_map
+        ]
         db.add(direction)
         logger.info("  + направление: %s", name)
     await db.flush()
 
 
-async def seed_ck_courses(db: AsyncSession, tag_map: dict[str, Competency]) -> None:
-    """Сидирование 20 программ ЦК с компетенциями и пререквизитами."""
-    logger.info("Сидирование программ ЦК...")
-    for name, category, comp_tags, prereq_tags in CK_COURSES_DATA:
-        result = await db.execute(select(CKCourse).where(CKCourse.name == name))
-        if result.scalar_one_or_none() is not None:
-            continue
-        course = CKCourse(name=name, category=category, credits=2)
-        course.competencies = [tag_map[t] for t in comp_tags if t in tag_map]
-        course.prerequisites = [tag_map[t] for t in prereq_tags if t in tag_map]
-        db.add(course)
-        logger.info("  + курс ЦК: %s", name)
-    await db.flush()
+# ── Дисциплины ─────────────────────────────────────────────────────────────
+
+_DISCIPLINE_TYPE_MAP = {
+    "mandatory": DisciplineType.MANDATORY,
+    "elective": DisciplineType.ELECTIVE,
+    "choice": DisciplineType.CHOICE,
+}
 
 
 async def seed_disciplines(db: AsyncSession, tag_map: dict[str, Competency]) -> None:
-    """Сидирование дисциплин учебного плана ИУ5 из JSON."""
+    """Сидирование дисциплин учебного плана из disciplines.json."""
     logger.info("Сидирование дисциплин...")
-    data_file = SEED_DATA_DIR / "disciplines.json"
-    with data_file.open(encoding="utf-8") as f:
-        disciplines_data = json.load(f)
+    data = _load_json("disciplines.json")
 
-    type_map = {
-        "mandatory": DisciplineType.MANDATORY,
-        "elective": DisciplineType.ELECTIVE,
-        "choice": DisciplineType.CHOICE,
-    }
-
-    for item in disciplines_data:
+    for item in data:
         name = item["name"]
         result = await db.execute(select(Discipline).where(Discipline.name == name))
         if result.scalar_one_or_none() is not None:
@@ -338,7 +114,7 @@ async def seed_disciplines(db: AsyncSession, tag_map: dict[str, Competency]) -> 
             name=name,
             semester=item["semester"],
             credits=item["credits"],
-            type=type_map[item["type"]],
+            type=_DISCIPLINE_TYPE_MAP[item["type"]],
             control_form=item["control_form"],
             department=item.get("department"),
         )
@@ -346,7 +122,40 @@ async def seed_disciplines(db: AsyncSession, tag_map: dict[str, Competency]) -> 
         db.add(disc)
         logger.info("  + дисциплина [%d сем.]: %s", item["semester"], name)
     await db.flush()
-    logger.info("Дисциплин загружено: %d", len(disciplines_data))
+    logger.info("Дисциплин загружено: %d", len(data))
+
+
+# ── Программы ЦК ──────────────────────────────────────────────────────────
+
+
+async def seed_ck_courses(db: AsyncSession, tag_map: dict[str, Competency]) -> None:
+    """Сидирование программ ЦК из ck_courses.json."""
+    logger.info("Сидирование программ ЦК...")
+    data = _load_json("ck_courses.json")
+
+    for item in data:
+        name = item["name"]
+        result = await db.execute(select(CKCourse).where(CKCourse.name == name))
+        if result.scalar_one_or_none() is not None:
+            continue
+        course = CKCourse(
+            name=name,
+            description=item.get("description"),
+            category=CKCourseCategory(item["category"]),
+            credits=item.get("credits", 2),
+        )
+        course.competencies = [
+            tag_map[t] for t in item.get("competency_tags", []) if t in tag_map
+        ]
+        course.prerequisites = [
+            tag_map[t] for t in item.get("prerequisite_tags", []) if t in tag_map
+        ]
+        db.add(course)
+        logger.info("  + курс ЦК: %s", name)
+    await db.flush()
+
+
+# ── Правила ЭС ────────────────────────────────────────────────────────────
 
 
 async def seed_rules(db: AsyncSession) -> None:
@@ -371,6 +180,9 @@ async def seed_rules(db: AsyncSession) -> None:
         db.add(rule)
         logger.info("  + правило R%d: %s", rule_data["number"], rule_data["name"])
     await db.flush()
+
+
+# ── Запуск ─────────────────────────────────────────────────────────────────
 
 
 async def run_seed() -> None:
