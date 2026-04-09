@@ -183,7 +183,7 @@ class User(Base):
     # Связи
     refresh_tokens: Mapped[list[RefreshToken]] = relationship(back_populates="user")
     completed_ck: Mapped[list[StudentCompletedCK]] = relationship(back_populates="user")
-    weak_subjects: Mapped[list[StudentWeakSubject]] = relationship(back_populates="user")
+    grades: Mapped[list[StudentGrade]] = relationship(back_populates="user")
 
 
 class RefreshToken(Base):
@@ -248,6 +248,7 @@ class CKCourse(Base):
     name: Mapped[str] = mapped_column(String(255), unique=True)
     description: Mapped[str | None] = mapped_column(Text)
     category: Mapped[CKCourseCategory] = mapped_column(Enum(CKCourseCategory))
+    credits: Mapped[int] = mapped_column(Integer, default=2)  # е.з., по умолчанию 2
 
     # Связи
     competencies: Mapped[list[Competency]] = relationship(
@@ -326,8 +327,10 @@ class StudentCompletedCK(Base):
     ck_course: Mapped[CKCourse] = relationship()
 
 
-class StudentWeakSubject(Base):
-    __tablename__ = "student_weak_subjects"
+class StudentGrade(Base):
+    """Оценка студента по дисциплине. Используется для вычисления X9-X11."""
+
+    __tablename__ = "student_grades"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
@@ -335,7 +338,7 @@ class StudentWeakSubject(Base):
     discipline_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("disciplines.id", ondelete="CASCADE"), primary_key=True
     )
-    grade: Mapped[int] = mapped_column(Integer)
+    grade: Mapped[int] = mapped_column(Integer)  # 2-5
 
-    user: Mapped[User] = relationship(back_populates="weak_subjects")
+    user: Mapped[User] = relationship(back_populates="grades")
     discipline: Mapped[Discipline] = relationship()
