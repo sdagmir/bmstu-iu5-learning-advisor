@@ -7,7 +7,9 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: TC002
@@ -19,7 +21,11 @@ from app.db.models import (
     CKCourseCategory,
     Competency,
     CompetencyCategory,
+    Discipline,
+    DisciplineType,
 )
+
+SEED_DATA_DIR = Path(__file__).parent / "seed_data"
 
 logger = logging.getLogger(__name__)
 
@@ -310,6 +316,39 @@ async def seed_ck_courses(db: AsyncSession, tag_map: dict[str, Competency]) -> N
     await db.flush()
 
 
+async def seed_disciplines(db: AsyncSession, tag_map: dict[str, Competency]) -> None:
+    """Сидирование дисциплин учебного плана ИУ5 из JSON."""
+    logger.info("Сидирование дисциплин...")
+    data_file = SEED_DATA_DIR / "disciplines.json"
+    with data_file.open(encoding="utf-8") as f:
+        disciplines_data = json.load(f)
+
+    type_map = {
+        "mandatory": DisciplineType.MANDATORY,
+        "elective": DisciplineType.ELECTIVE,
+        "choice": DisciplineType.CHOICE,
+    }
+
+    for item in disciplines_data:
+        name = item["name"]
+        result = await db.execute(select(Discipline).where(Discipline.name == name))
+        if result.scalar_one_or_none() is not None:
+            continue
+        disc = Discipline(
+            name=name,
+            semester=item["semester"],
+            credits=item["credits"],
+            type=type_map[item["type"]],
+            control_form=item["control_form"],
+            department=item.get("department"),
+        )
+        disc.competencies = [tag_map[t] for t in item.get("tags", []) if t in tag_map]
+        db.add(disc)
+        logger.info("  + дисциплина [%d сем.]: %s", item["semester"], name)
+    await db.flush()
+    logger.info("Дисциплин загружено: %d", len(disciplines_data))
+
+
 async def seed_rules(db: AsyncSession) -> None:
     """Сидирование 52 правил ЭС из rules_data."""
     from app.db.models import Rule
@@ -343,6 +382,7 @@ async def run_seed() -> None:
         try:
             tag_map = await seed_competencies(db)
             await seed_career_directions(db, tag_map)
+            await seed_disciplines(db, tag_map)
             await seed_ck_courses(db, tag_map)
             await seed_rules(db)
             await db.commit()
