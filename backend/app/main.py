@@ -69,6 +69,7 @@ def create_app() -> FastAPI:
 def _register_routers(app: FastAPI) -> None:
     from app.admin.router import router as admin_router
     from app.auth.router import router as auth_router
+    from app.catalog.router import router as catalog_router
     from app.expert.router import router as expert_router
     from app.llm.router import router as chat_router
     from app.rag.router import router as rag_router
@@ -77,6 +78,7 @@ def _register_routers(app: FastAPI) -> None:
     prefix = "/api/v1"
     app.include_router(auth_router, prefix=f"{prefix}/auth", tags=["auth"])
     app.include_router(users_router, prefix=f"{prefix}/users", tags=["users"])
+    app.include_router(catalog_router, prefix=f"{prefix}/catalog", tags=["catalog"])
     app.include_router(expert_router, prefix=f"{prefix}/expert", tags=["expert"])
     app.include_router(chat_router, prefix=f"{prefix}/chat", tags=["chat"])
     app.include_router(rag_router, prefix=f"{prefix}/rag", tags=["rag"])

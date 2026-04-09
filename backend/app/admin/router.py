@@ -25,6 +25,8 @@ from app.admin.schemas import (
     RuleCreate,
     RuleRead,
     RuleUpdate,
+    UserAdminRead,
+    UserAdminUpdate,
 )
 from app.admin.service import (
     career_direction_service,
@@ -33,10 +35,36 @@ from app.admin.service import (
     discipline_service,
     focus_advice_service,
     rule_service,
+    user_admin_service,
 )
 from app.dependencies import CurrentAdmin, DbSession, PageLimit, PageOffset
 
 router = APIRouter()
+
+
+# ── Пользователи ────────────────────────────────────────────────────────────
+
+
+@router.get("/users", response_model=list[UserAdminRead])
+async def list_users(
+    admin: CurrentAdmin, db: DbSession, offset: PageOffset = 0, limit: PageLimit = 50
+) -> list[UserAdminRead]:
+    items = await user_admin_service.list(db, offset=offset, limit=limit)
+    return [UserAdminRead.model_validate(i) for i in items]
+
+
+@router.get("/users/{user_id}", response_model=UserAdminRead)
+async def get_user(user_id: uuid.UUID, admin: CurrentAdmin, db: DbSession) -> UserAdminRead:
+    user = await user_admin_service.get(user_id, db)
+    return UserAdminRead.model_validate(user)
+
+
+@router.patch("/users/{user_id}", response_model=UserAdminRead)
+async def update_user(
+    user_id: uuid.UUID, body: UserAdminUpdate, admin: CurrentAdmin, db: DbSession
+) -> UserAdminRead:
+    user = await user_admin_service.update(user_id, body, db)
+    return UserAdminRead.model_validate(user)
 
 
 # ── Компетенции ──────────────────────────────────────────────────────────────

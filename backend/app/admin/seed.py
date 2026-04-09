@@ -302,7 +302,7 @@ async def seed_ck_courses(db: AsyncSession, tag_map: dict[str, Competency]) -> N
         result = await db.execute(select(CKCourse).where(CKCourse.name == name))
         if result.scalar_one_or_none() is not None:
             continue
-        course = CKCourse(name=name, category=category)
+        course = CKCourse(name=name, category=category, credits=2)
         course.competencies = [tag_map[t] for t in comp_tags if t in tag_map]
         course.prerequisites = [tag_map[t] for t in prereq_tags if t in tag_map]
         db.add(course)

@@ -13,6 +13,7 @@ from app.db.models import (
     Discipline,
     FocusAdvice,
     Rule,
+    User,
 )
 from app.exceptions import NotFoundError
 
@@ -32,6 +33,7 @@ if TYPE_CHECKING:
         FocusAdviceUpdate,
         RuleCreate,
         RuleUpdate,
+        UserAdminUpdate,
     )
 
 
@@ -182,7 +184,10 @@ class CKCourseService:
     async def create(self, data: CKCourseCreate, db: AsyncSession) -> CKCourse:
         comps = await _load_competencies(db, data.competency_ids)
         prereqs = await _load_competencies(db, data.prerequisite_ids)
-        course = CKCourse(name=data.name, description=data.description, category=data.category)
+        course = CKCourse(
+            name=data.name, description=data.description,
+            category=data.category, credits=data.credits,
+        )
         course.competencies = comps
         course.prerequisites = prereqs
         db.add(course)
@@ -356,6 +361,38 @@ class RuleService:
         await db.flush()
 
 
+# ── Управление пользователями ──────────────────────────────────────────────
+
+
+class UserAdminService:
+    """CRUD пользователей для администратора."""
+
+    async def list(self, db: AsyncSession, *, offset: int = 0, limit: int = 50) -> list[User]:
+        result = await db.execute(
+            select(User)
+            .order_by(User.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
+    async def get(self, user_id: uuid.UUID, db: AsyncSession) -> User:
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        if user is None:
+            raise NotFoundError("User", str(user_id))
+        return user
+
+    async def update(
+        self, user_id: uuid.UUID, data: UserAdminUpdate, db: AsyncSession
+    ) -> User:
+        user = await self.get(user_id, db)
+        for field, value in data.model_dump(exclude_unset=True).items():
+            setattr(user, field, value)
+        await db.flush()
+        return user
+
+
 # ── Синглтоны сервисов ───────────────────────────────────────────────────────
 
 competency_service = CompetencyService()
@@ -364,3 +401,4 @@ ck_course_service = CKCourseService()
 career_direction_service = CareerDirectionService()
 focus_advice_service = FocusAdviceService()
 rule_service = RuleService()
+user_admin_service = UserAdminService()

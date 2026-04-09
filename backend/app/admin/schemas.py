@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
 from app.db.models import (
+    CareerGoal,
     CKCourseCategory,
     CompetencyCategory,
     DisciplineType,
     RuleGroup,
+    TechparkStatus,
+    UserRole,
+    WorkloadPref,
 )
 
 # ── Компетенции ──────────────────────────────────────────────────────────────
@@ -78,6 +83,7 @@ class CKCourseCreate(BaseModel):
     name: str = Field(max_length=255)
     description: str | None = None
     category: CKCourseCategory
+    credits: int = Field(default=2, ge=1)
     competency_ids: list[uuid.UUID] = []
     prerequisite_ids: list[uuid.UUID] = []
 
@@ -86,6 +92,7 @@ class CKCourseUpdate(BaseModel):
     name: str | None = Field(default=None, max_length=255)
     description: str | None = None
     category: CKCourseCategory | None = None
+    credits: int | None = Field(default=None, ge=1)
     competency_ids: list[uuid.UUID] | None = None
     prerequisite_ids: list[uuid.UUID] | None = None
 
@@ -95,6 +102,7 @@ class CKCourseRead(BaseModel):
     name: str
     description: str | None
     category: CKCourseCategory
+    credits: int
     competencies: list[CompetencyRead] = []
     prerequisites: list[CompetencyRead] = []
 
@@ -195,3 +203,29 @@ class RuleRead(BaseModel):
     is_active: bool
 
     model_config = {"from_attributes": True}
+
+
+# ── Управление пользователями ──────────────────────────────────────────────
+
+
+class UserAdminRead(BaseModel):
+    """Пользователь — представление для админа."""
+
+    id: uuid.UUID
+    email: str
+    role: UserRole
+    is_active: bool
+    semester: int | None
+    career_goal: CareerGoal | None
+    technopark_status: TechparkStatus | None
+    workload_pref: WorkloadPref | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class UserAdminUpdate(BaseModel):
+    """Обновление пользователя админом (роль и активность)."""
+
+    role: UserRole | None = None
+    is_active: bool | None = None
