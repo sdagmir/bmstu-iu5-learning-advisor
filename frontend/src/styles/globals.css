@@ -1,0 +1,209 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* Шрифты — vendored через fontsource (см. .impeccable.md) */
+@import '@fontsource-variable/bitter/index.css';
+@import '@fontsource/golos-text/400.css';
+@import '@fontsource/golos-text/500.css';
+@import '@fontsource/golos-text/600.css';
+@import '@fontsource-variable/jetbrains-mono/index.css';
+
+/* -------------------------------------------------------------
+   @theme — наши токены. Источник истины проекта.
+   ------------------------------------------------------------- */
+@theme {
+  /* Шрифты */
+  --font-serif: 'Bitter Variable', ui-serif, Georgia, serif;
+  --font-sans: 'Golos Text', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, monospace;
+
+  /* Primary — приглушённый бауманский navy */
+  --color-primary: oklch(0.38 0.08 248);
+  --color-primary-hover: oklch(0.34 0.09 248);
+  --color-primary-soft: oklch(0.94 0.02 248);
+
+  /* Нейтрали — тинтованы к primary hue 250 */
+  --color-bg: oklch(0.985 0.004 250);
+  --color-surface: oklch(1 0 0);
+  --color-surface-muted: oklch(0.975 0.005 250);
+  /*
+   * Hover для интерактивов на muted-фоне (sidebar, плотные таблицы).
+   * Сидит между surface-muted (0.975) и primary-soft (0.94),
+   * с тонким primary-намёком — чтобы hover и active формировали
+   * последовательность «темнее → ещё темнее + тинт».
+   */
+  --color-surface-hover: oklch(0.955 0.008 248);
+  --color-border: oklch(0.92 0.005 250);
+  --color-border-strong: oklch(0.86 0.008 250);
+
+  /* Текст */
+  --color-text: oklch(0.22 0.012 250);
+  --color-text-muted: oklch(0.5 0.01 250);
+  --color-text-subtle: oklch(0.65 0.008 250);
+
+  /*
+   * Брендовая терракота — используется ЯВНО через `bg-brand-accent` или
+   * `bg-[color:var(--color-brand-accent)]` 1–2 раза на экран максимум:
+   * карьерная цель студента, highlight критичной рекомендации, important warning.
+   */
+  --color-brand-accent: oklch(0.58 0.13 38);
+  --color-brand-accent-soft: oklch(0.95 0.03 38);
+
+  /*
+   * shadcn-семантический `--color-accent` — подсветка интерактива в
+   * Select/Popover/Command/DropdownMenu/Calendar. Мапим в primary-soft, чтобы
+   * вся подсветка читалась в нашей основной палитре, а не в терракоте.
+   */
+  --color-accent: oklch(0.94 0.02 248);
+  --color-accent-foreground: oklch(0.38 0.08 248);
+
+  /* Статусы */
+  --color-success: oklch(0.56 0.11 155);
+  --color-success-soft: oklch(0.95 0.03 155);
+  --color-warning: oklch(0.68 0.13 75);
+  --color-warning-soft: oklch(0.96 0.04 75);
+  --color-danger: oklch(0.5 0.15 25);
+  --color-danger-soft: oklch(0.95 0.04 25);
+
+  /* Spacing 4pt */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 0.75rem;
+  --space-base: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --space-4xl: 6rem;
+
+  /* Тип-шкала */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.375rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.25rem;
+  --text-3xl: 3rem;
+
+  /* Радиусы */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+}
+
+/* -------------------------------------------------------------
+   :root — shadcn-совместимые переменные, смаппленные на наши.
+   Нужно, чтобы scaffolded-компоненты shadcn/ui использовали
+   наши цвета без правки их исходников.
+   ------------------------------------------------------------- */
+:root {
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
+
+  --card: var(--color-surface);
+  --card-foreground: var(--color-text);
+
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-text);
+
+  --primary: var(--color-primary);
+  --primary-foreground: var(--color-surface);
+
+  --secondary: var(--color-surface-muted);
+  --secondary-foreground: var(--color-text);
+
+  --muted: var(--color-surface-muted);
+  --muted-foreground: var(--color-text-muted);
+
+  --accent: var(--color-accent);
+  --accent-foreground: var(--color-accent-foreground);
+
+  --destructive: var(--color-danger);
+  --destructive-foreground: var(--color-surface);
+
+  --border: var(--color-border);
+  --input: var(--color-border);
+  --ring: var(--color-primary);
+
+  --radius: var(--radius-md);
+}
+
+/* -------------------------------------------------------------
+   @theme inline — shadcn-совместимый слой для Tailwind v4.
+   Делает классы bg-background, text-foreground, border-border
+   рабочими, не ломая нашу @theme выше.
+   ------------------------------------------------------------- */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+/* -------------------------------------------------------------
+   Base layer
+   ------------------------------------------------------------- */
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-feature-settings: 'kern', 'liga', 'calt';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    line-height: 1.15;
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-mono);
+  }
+
+  /* Табулярные цифры для оценок, процентов, семестров */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Default border + ring от shadcn-компонентов */
+  * {
+    border-color: var(--color-border);
+  }
+
+  /* Cursor: pointer на всех кликабельных — браузерный дефолт
+     для <button> стал cursor: default, нам нужна лапка. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='menuitem']:not([aria-disabled='true']),
+  [role='option']:not([aria-disabled='true']),
+  summary {
+    cursor: pointer;
+  }
+}
