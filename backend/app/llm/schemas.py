@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ChatMessage(BaseModel):
@@ -16,7 +16,7 @@ class ChatRequest(BaseModel):
     """Запрос на обработку сообщения в чате."""
 
     message: str
-    history: list[ChatMessage] = []
+    history: list[ChatMessage] = Field(default_factory=list)
 
 
 class ChatResponse(BaseModel):
@@ -29,7 +29,7 @@ class ChatResponse(BaseModel):
 class DebugInfo(BaseModel):
     """Отладочные данные для тестового чата администратора."""
 
-    rules_fired: list[str] = []
-    rag_chunks: list[str] = []
-    tool_calls: list[dict[str, Any]] = []
-    profile_changes: dict[str, Any] = {}
+    rules_fired: list[str] = Field(default_factory=list)
+    rag_chunks: list[str] = Field(default_factory=list)
+    tool_calls: list[dict[str, Any]] = Field(default_factory=list)
+    profile_changes: dict[str, Any] = Field(default_factory=dict)

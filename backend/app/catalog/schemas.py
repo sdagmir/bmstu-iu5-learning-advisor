@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.db.models import CKCourseCategory, CompetencyCategory, DisciplineType
 
@@ -28,7 +28,7 @@ class DisciplineCatalog(BaseModel):
     type: DisciplineType
     control_form: str
     department: str | None
-    competencies: list[CompetencyShort] = []
+    competencies: list[CompetencyShort] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
 
@@ -41,7 +41,7 @@ class CKCourseCatalog(BaseModel):
     description: str | None
     category: CKCourseCategory
     credits: int
-    competencies: list[CompetencyShort] = []
-    prerequisites: list[CompetencyShort] = []
+    competencies: list[CompetencyShort] = Field(default_factory=list)
+    prerequisites: list[CompetencyShort] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}

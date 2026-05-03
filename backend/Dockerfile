@@ -6,8 +6,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Dependencies layer (cached while pyproject.toml unchanged)
+# INSTALL_DEV=true ставит [dev] extras (pytest, ruff, mypy) — для локальной разработки
+ARG INSTALL_DEV=false
 COPY pyproject.toml .
-RUN pip install --no-cache-dir .
+RUN if [ "$INSTALL_DEV" = "true" ]; then \
+        pip install --no-cache-dir ".[dev]"; \
+    else \
+        pip install --no-cache-dir .; \
+    fi
 
 # App code (changes frequently — separate layer)
 COPY . .

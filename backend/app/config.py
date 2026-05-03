@@ -11,6 +11,8 @@ class Settings(BaseSettings):
 
     # БД
     database_url: str = "postgresql+asyncpg://rs_ito:rs_ito@localhost:5432/rs_ito"
+    # URL тестовой БД (используется только в integration-тестах)
+    test_database_url: str = "postgresql+asyncpg://rs_ito:rs_ito@postgres:5432/rs_ito_test"
     db_pool_size: int = 20
 
     # Аутентификация

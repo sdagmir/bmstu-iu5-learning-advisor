@@ -112,7 +112,7 @@ class QdrantService:
 
         Использует Qdrant Query API: prefetch dense и sparse, потом RRF fusion.
         """
-        from qdrant_client.models import Fusion, Prefetch
+        from qdrant_client.models import Fusion, FusionQuery, Prefetch
         from qdrant_client.models import SparseVector as QdrantSparseVector
 
         client = self._get_client()
@@ -141,7 +141,7 @@ class QdrantService:
         results = client.query_points(
             collection_name=self._collection,
             prefetch=prefetches,
-            query=Fusion.RRF,
+            query=FusionQuery(fusion=Fusion.RRF),
             limit=top_k,
         )
 
