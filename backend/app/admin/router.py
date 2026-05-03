@@ -6,6 +6,7 @@ import uuid
 
 from fastapi import APIRouter
 
+from app.admin import rule_lock_service
 from app.admin.schemas import (
     CareerDirectionCreate,
     CareerDirectionRead,
@@ -23,6 +24,9 @@ from app.admin.schemas import (
     FocusAdviceRead,
     FocusAdviceUpdate,
     RuleCreate,
+    RuleEditingLockStatus,
+    RulePreviewRequest,
+    RulePreviewResponse,
     RuleRead,
     RuleUpdate,
     UserAdminRead,
@@ -38,6 +42,8 @@ from app.admin.service import (
     user_admin_service,
 )
 from app.dependencies import CurrentAdmin, DbSession, PageLimit, PageOffset
+from app.expert.schemas import StudentProfile
+from app.expert.service import expert_service
 
 router = APIRouter()
 
@@ -229,7 +235,39 @@ async def delete_focus_advice(advice_id: uuid.UUID, admin: CurrentAdmin, db: DbS
     await focus_advice_service.delete(advice_id, db)
 
 
-# ── Правила ЭС ──────────────────────────────────────────────────────────────
+# ── Правила ЭС: lock-конструктор ────────────────────────────────────────────
+
+
+@router.get("/rules/lock", response_model=RuleEditingLockStatus)
+async def get_rules_lock(admin: CurrentAdmin, db: DbSession) -> RuleEditingLockStatus:
+    """Текущее состояние лока: занят/свободен, кем, до какого времени."""
+    status = await rule_lock_service.get_status(db, admin.id)
+    return RuleEditingLockStatus(**status.__dict__)
+
+
+@router.post("/rules/lock", response_model=RuleEditingLockStatus)
+async def acquire_rules_lock(
+    admin: CurrentAdmin, db: DbSession
+) -> RuleEditingLockStatus:
+    """Захватить лок (или продлить TTL, если уже принадлежит этому админу)."""
+    await rule_lock_service.acquire(db, admin.id)
+    status = await rule_lock_service.get_status(db, admin.id)
+    return RuleEditingLockStatus(**status.__dict__)
+
+
+@router.delete("/rules/lock", status_code=204)
+async def release_rules_lock(admin: CurrentAdmin, db: DbSession) -> None:
+    """Освободить свой лок (если он захвачен этим админом)."""
+    await rule_lock_service.release(db, admin.id)
+
+
+@router.delete("/rules/lock/force", status_code=204)
+async def force_release_rules_lock(admin: CurrentAdmin, db: DbSession) -> None:
+    """Принудительно освободить чужой лок (например, забытый коллегой)."""
+    await rule_lock_service.force_release(db)
+
+
+# ── Правила ЭС: CRUD ────────────────────────────────────────────────────────
 
 
 @router.get("/rules", response_model=list[RuleRead])
@@ -242,7 +280,10 @@ async def list_rules(
 
 @router.post("/rules", response_model=RuleRead, status_code=201)
 async def create_rule(body: RuleCreate, admin: CurrentAdmin, db: DbSession) -> RuleRead:
+    """Создание правила. Требует захваченный лок. По умолчанию правило — черновик."""
+    await rule_lock_service.assert_owned_by(db, admin.id)
     item = await rule_service.create(body, db)
+    # Новое правило — draft по умолчанию, hot-reload не нужен
     return RuleRead.model_validate(item)
 
 
@@ -250,10 +291,69 @@ async def create_rule(body: RuleCreate, admin: CurrentAdmin, db: DbSession) -> R
 async def update_rule(
     rule_id: uuid.UUID, body: RuleUpdate, admin: CurrentAdmin, db: DbSession
 ) -> RuleRead:
+    """Изменение правила. Требует захваченный лок. Hot-reload, если правило опубликовано."""
+    await rule_lock_service.assert_owned_by(db, admin.id)
     item = await rule_service.update(rule_id, body, db)
+    if item.is_published:
+        await db.flush()
+        await expert_service.reload_from_db(db)
     return RuleRead.model_validate(item)
 
 
 @router.delete("/rules/{rule_id}", status_code=204)
 async def delete_rule(rule_id: uuid.UUID, admin: CurrentAdmin, db: DbSession) -> None:
+    """Удаление правила. Требует захваченный лок. Hot-reload, если правило было опубликовано."""
+    await rule_lock_service.assert_owned_by(db, admin.id)
+    rule = await rule_service.get(rule_id, db)
+    was_published = rule.is_published
     await rule_service.delete(rule_id, db)
+    if was_published:
+        await db.flush()
+        await expert_service.reload_from_db(db)
+
+
+# ── Правила ЭС: publish / preview ────────────────────────────────────────────
+
+
+@router.post("/rules/{rule_id}/publish", response_model=RuleRead)
+async def publish_rule(
+    rule_id: uuid.UUID, admin: CurrentAdmin, db: DbSession
+) -> RuleRead:
+    """Публикация правила. Требует лок. После публикации движок ЭС перезагружается."""
+    await rule_lock_service.assert_owned_by(db, admin.id)
+    item = await rule_service.set_published(rule_id, True, db)
+    await db.flush()
+    await expert_service.reload_from_db(db)
+    return RuleRead.model_validate(item)
+
+
+@router.post("/rules/{rule_id}/unpublish", response_model=RuleRead)
+async def unpublish_rule(
+    rule_id: uuid.UUID, admin: CurrentAdmin, db: DbSession
+) -> RuleRead:
+    """Снятие правила с публикации. Требует лок. После снятия движок ЭС перезагружается."""
+    await rule_lock_service.assert_owned_by(db, admin.id)
+    item = await rule_service.set_published(rule_id, False, db)
+    await db.flush()
+    await expert_service.reload_from_db(db)
+    return RuleRead.model_validate(item)
+
+
+@router.post("/rules/preview", response_model=RulePreviewResponse)
+async def preview_rules(
+    body: RulePreviewRequest, admin: CurrentAdmin, db: DbSession
+) -> RulePreviewResponse:
+    """Прогон ЭС в одноразовом движке (с черновиками или без). На production не влияет.
+
+    Используется в конструкторе для проверки эффекта изменений перед публикацией.
+    """
+    profile = StudentProfile.model_validate(body.profile)
+    trace, recommendations = await expert_service.preview(
+        profile, db, include_drafts=body.include_drafts
+    )
+    return RulePreviewResponse(
+        recommendations=[r.model_dump(mode="json") for r in recommendations],
+        fired_rule_ids=trace.rules_fired_ids,
+        total_checked=trace.total_checked,
+        total_fired=trace.total_fired,
+    )

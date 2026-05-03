@@ -10,12 +10,14 @@ if TYPE_CHECKING:
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
 
 from app.config import settings
 from app.exceptions import (
     AppError,
     ConflictError,
     ForbiddenError,
+    LockedError,
     NotFoundError,
     UnauthorizedError,
     UpstreamError,
@@ -30,16 +32,31 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Инициализация и завершение инфраструктурных клиентов."""
     logger.info("Starting application")
 
+    from app.db.database import async_session_factory
+    from app.expert.service import expert_service
+    from app.llm.service import chat_service
+    from app.rag.service import rag_service
+
     # Восстановление BM25 корпуса из Qdrant
     try:
-        from app.rag.service import rag_service
-
         rag_service.restore_bm25_from_qdrant()
-    except Exception:
+    except BaseException:
         logger.warning("Не удалось восстановить BM25, RAG поиск будет без sparse")
 
-    yield
-    logger.info("Shutdown complete")
+    # Загрузка опубликованных правил ЭС из БД (вместо seed in-memory)
+    try:
+        async with async_session_factory() as db:
+            await expert_service.reload_from_db(db)
+    except BaseException:
+        logger.warning("Не удалось загрузить правила ЭС из БД, движок останется на seed")
+
+    try:
+        yield
+    finally:
+        # Закрытие httpx-клиентов, чтобы не утекали соединения на shutdown
+        await chat_service._llm.close()
+        await rag_service._embedder.close()
+        logger.info("Shutdown complete")
 
 
 def create_app() -> FastAPI:
@@ -92,6 +109,7 @@ def _register_exception_handlers(app: FastAPI) -> None:
         ForbiddenError: 403,
         ValidationError: 422,
         ConflictError: 409,
+        LockedError: 423,
         UpstreamError: 502,
     }
 
@@ -112,6 +130,19 @@ def _register_exception_handlers(app: FastAPI) -> None:
             return handler
 
         app.add_exception_handler(exc_class, _make_handler(status_code))
+
+    @app.exception_handler(IntegrityError)
+    async def integrity_handler(request: Request, exc: IntegrityError) -> JSONResponse:
+        # Дубликаты unique-ключей и нарушения FK на уровне БД → 409
+        return JSONResponse(
+            status_code=409,
+            content={
+                "error": {
+                    "code": "ConflictError",
+                    "message": "Resource already exists or violates a constraint",
+                }
+            },
+        )
 
     @app.exception_handler(Exception)
     async def catch_all(request: Request, exc: Exception) -> JSONResponse:

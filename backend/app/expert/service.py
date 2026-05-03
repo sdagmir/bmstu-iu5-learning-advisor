@@ -23,7 +23,10 @@ class ExpertService:
         self._engine = _build_engine_from_seed()
 
     async def reload_from_db(self, db: object) -> None:
-        """Перезагрузка правил из БД. Вызывается при старте и после изменений."""
+        """Перезагрузка production-движка из БД. Только опубликованные правила.
+
+        Вызывается на старте и после publish/unpublish/изменения опубликованного правила.
+        """
         self._engine = await PythonRuleEngine.from_db(db)
 
     def get_recommendations(self, profile: StudentProfile) -> list[Recommendation]:
@@ -33,6 +36,21 @@ class ExpertService:
         self, profile: StudentProfile
     ) -> tuple[EvaluationTrace, list[Recommendation]]:
         return self._engine.evaluate_with_trace(profile)
+
+    async def preview(
+        self,
+        profile: StudentProfile,
+        db: object,
+        *,
+        include_drafts: bool = True,
+    ) -> tuple[EvaluationTrace, list[Recommendation]]:
+        """Прогон ЭС в одноразовом движке для конструктора.
+
+        По умолчанию загружает published + черновики, чтобы админ увидел эффект
+        от своих изменений до публикации. На production-движок не влияет.
+        """
+        temp_engine = await PythonRuleEngine.from_db(db, include_drafts=include_drafts)
+        return temp_engine.evaluate_with_trace(profile)
 
     @property
     def rule_count(self) -> int:

@@ -37,3 +37,7 @@ class UpstreamError(AppError):
 
     def __init__(self, service: str, detail: str = "") -> None:
         super().__init__(f"{service} unavailable: {detail}")
+
+
+class LockedError(AppError):
+    """Ресурс залочен другим пользователем. HTTP 423 Locked."""

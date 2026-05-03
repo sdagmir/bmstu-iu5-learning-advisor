@@ -273,7 +273,13 @@ class CareerDirection(Base):
 
 
 class Rule(Base):
-    """Правило экспертной системы. Хранит условия и рекомендацию в JSON."""
+    """Правило экспертной системы. Хранит условия и рекомендацию в JSON.
+
+    Жизненный цикл:
+    - is_active=False — правило выключено, движок его игнорирует (kill-switch)
+    - is_active=True, is_published=False — черновик, виден только в админ-preview
+    - is_active=True, is_published=True — опубликовано, применяется ко всем студентам
+    """
 
     __tablename__ = "rules"
 
@@ -286,6 +292,30 @@ class Rule(Base):
     recommendation: Mapped[dict] = mapped_column(JSON)
     priority: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Опубликованное правило применяется к рекомендациям всех студентов.
+    # Новое правило по умолчанию — черновик; админ публикует через эндпоинт.
+    is_published: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class RuleEditingLock(Base):
+    """Pessimistic-лок на редактирование правил.
+
+    Singleton-таблица: одна запись с slot=1 одновременно. Когда админ начинает
+    работу с конструктором, он захватывает лок; пока лок активен, mutating-операции
+    над правилами доступны только этому админу. Лок имеет TTL (по умолчанию 30 мин)
+    и автоматически освобождается, если админ его не продлил.
+    """
+
+    __tablename__ = "rule_editing_locks"
+
+    slot: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    admin_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
+    )
+    acquired_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class FocusAdvice(Base):

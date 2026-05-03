@@ -176,6 +176,8 @@ async def seed_rules(db: AsyncSession) -> None:
             condition=rule_data["condition"],
             recommendation=rule_data["recommendation"],
             priority=rule_data.get("priority", 0),
+            # Seed-правила сразу опубликованы — это "shipped" набор для всех студентов
+            is_published=True,
         )
         db.add(rule)
         logger.info("  + правило R%d: %s", rule_data["number"], rule_data["name"])

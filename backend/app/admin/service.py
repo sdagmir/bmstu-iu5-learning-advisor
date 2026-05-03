@@ -360,6 +360,15 @@ class RuleService:
         await db.delete(rule)
         await db.flush()
 
+    async def set_published(
+        self, rule_id: uuid.UUID, published: bool, db: AsyncSession
+    ) -> Rule:
+        """Перевод правила между статусами draft и published."""
+        rule = await self.get(rule_id, db)
+        rule.is_published = published
+        await db.flush()
+        return rule
+
 
 # ── Управление пользователями ──────────────────────────────────────────────
 

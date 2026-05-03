@@ -134,13 +134,24 @@ class PythonRuleEngine:
         logger.info("Движок ЭС инициализирован: %d правил", len(self._rules))
 
     @classmethod
-    async def from_db(cls, db: object) -> PythonRuleEngine:
-        """Загрузка правил из БД. Вызывается при старте или обновлении."""
+    async def from_db(
+        cls, db: object, *, include_drafts: bool = False
+    ) -> PythonRuleEngine:
+        """Загрузка правил из БД.
+
+        - include_drafts=False (default) — только опубликованные active-правила.
+          Используется для production-движка, обслуживающего студентов.
+        - include_drafts=True — published + черновики. Для admin-preview.
+        """
         from sqlalchemy import select
 
         from app.db.models import Rule
 
-        result = await db.execute(select(Rule).where(Rule.is_active.is_(True)))  # type: ignore[union-attr]
+        stmt = select(Rule).where(Rule.is_active.is_(True))
+        if not include_drafts:
+            stmt = stmt.where(Rule.is_published.is_(True))
+
+        result = await db.execute(stmt)  # type: ignore[union-attr]
         db_rules = result.scalars().all()
 
         rules = [

@@ -50,7 +50,7 @@ class DisciplineCreate(BaseModel):
     type: DisciplineType
     control_form: str = Field(max_length=50)
     department: str | None = Field(default=None, max_length=50)
-    competency_ids: list[uuid.UUID] = []
+    competency_ids: list[uuid.UUID] = Field(default_factory=list)
 
 
 class DisciplineUpdate(BaseModel):
@@ -71,7 +71,7 @@ class DisciplineRead(BaseModel):
     type: DisciplineType
     control_form: str
     department: str | None
-    competencies: list[CompetencyRead] = []
+    competencies: list[CompetencyRead] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
 
@@ -84,8 +84,8 @@ class CKCourseCreate(BaseModel):
     description: str | None = None
     category: CKCourseCategory
     credits: int = Field(default=2, ge=1)
-    competency_ids: list[uuid.UUID] = []
-    prerequisite_ids: list[uuid.UUID] = []
+    competency_ids: list[uuid.UUID] = Field(default_factory=list)
+    prerequisite_ids: list[uuid.UUID] = Field(default_factory=list)
 
 
 class CKCourseUpdate(BaseModel):
@@ -103,8 +103,8 @@ class CKCourseRead(BaseModel):
     description: str | None
     category: CKCourseCategory
     credits: int
-    competencies: list[CompetencyRead] = []
-    prerequisites: list[CompetencyRead] = []
+    competencies: list[CompetencyRead] = Field(default_factory=list)
+    prerequisites: list[CompetencyRead] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
 
@@ -116,7 +116,7 @@ class CareerDirectionCreate(BaseModel):
     name: str = Field(max_length=100)
     description: str | None = None
     example_jobs: str | None = None
-    competency_ids: list[uuid.UUID] = []
+    competency_ids: list[uuid.UUID] = Field(default_factory=list)
 
 
 class CareerDirectionUpdate(BaseModel):
@@ -131,7 +131,7 @@ class CareerDirectionRead(BaseModel):
     name: str
     description: str | None
     example_jobs: str | None
-    competencies: list[CompetencyRead] = []
+    competencies: list[CompetencyRead] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
 
@@ -201,8 +201,39 @@ class RuleRead(BaseModel):
     recommendation: dict
     priority: int
     is_active: bool
+    is_published: bool
 
     model_config = {"from_attributes": True}
+
+
+# ── Конструктор правил: lock + preview + publish ────────────────────────────
+
+
+class RuleEditingLockStatus(BaseModel):
+    """Состояние pessimistic-лока на конструктор правил."""
+
+    is_locked: bool
+    admin_id: uuid.UUID | None = None
+    admin_email: str | None = None
+    acquired_at: datetime | None = None
+    expires_at: datetime | None = None
+    owned_by_me: bool = False
+
+
+class RulePreviewRequest(BaseModel):
+    """Запрос на прогон ЭС в режиме preview (с черновиками или без)."""
+
+    profile: dict
+    include_drafts: bool = True
+
+
+class RulePreviewResponse(BaseModel):
+    """Результат preview: рекомендации + список сработавших правил."""
+
+    recommendations: list[dict]
+    fired_rule_ids: list[str]
+    total_checked: int
+    total_fired: int
 
 
 # ── Управление пользователями ──────────────────────────────────────────────
