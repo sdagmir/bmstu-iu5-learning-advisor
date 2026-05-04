@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Scales } from '@phosphor-icons/react'
 import { PageTopBar } from '@/components/common/PageTopBar'
@@ -10,6 +10,7 @@ import { RuleList } from '@/features/rules/RuleList'
 import { RuleForm } from '@/features/rules/RuleForm'
 import { SandboxPanel } from '@/features/rules/SandboxPanel'
 import { PRESETS } from '@/features/simulator/presets'
+import { usePersistentState } from '@/hooks/usePersistentState'
 import type { RuleUpdate, SimulatorProfile } from '@/types/api'
 
 const SELECTION_NEW = '__new__'
@@ -48,9 +49,11 @@ export default function RulesPage() {
     [rules],
   )
 
-  // ── Sandbox profile state живёт здесь, чтобы пережить смену правила ──
-  const [sandboxProfile, setSandboxProfile] = useState<SimulatorProfile>(
-    () => PRESETS[0]!.profile,
+  // ── Sandbox profile state живёт здесь, persist в sessionStorage чтобы
+  //    пережить навигацию между admin-экранами в одной вкладке. ──
+  const [sandboxProfile, setSandboxProfile] = usePersistentState<SimulatorProfile>(
+    'admin.rules.sandbox-profile',
+    PRESETS[0]!.profile,
   )
   const updateProfile = (patch: Partial<SimulatorProfile>) =>
     setSandboxProfile((p) => ({ ...p, ...patch }))
@@ -98,7 +101,7 @@ export default function RulesPage() {
   }, [remove.isSuccess, setSearchParams, removeReset])
 
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col">
       <PageTopBar
         title="Правила ЭС"
         icon={<Scales size={18} weight="regular" />}
@@ -115,7 +118,7 @@ export default function RulesPage() {
         onForceRelease={() => lock.forceRelease()}
       />
 
-      <div className="grid h-[calc(100svh-58px-49px)] grid-cols-[360px_minmax(0,1fr)_420px] overflow-hidden">
+      <div className="grid min-h-0 flex-1 grid-cols-[360px_minmax(0,1fr)_420px] overflow-hidden">
         {/* Левая колонка — список правил */}
         <aside className="overflow-hidden border-r border-[color:var(--color-border)]">
           <RuleList
@@ -172,6 +175,6 @@ export default function RulesPage() {
           />
         </aside>
       </div>
-    </>
+    </div>
   )
 }

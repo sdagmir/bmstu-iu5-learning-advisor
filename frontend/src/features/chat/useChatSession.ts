@@ -1,6 +1,7 @@
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { chatApi } from './api'
+import { usePersistentState } from '@/hooks/usePersistentState'
 import type { ChatHistoryItem } from '@/types/api'
 
 export type ChatRole = 'user' | 'assistant' | 'error'
@@ -18,15 +19,19 @@ const newId = (): string =>
 
 /**
  * Хранение и отправка сообщений чата.
- * История — на клиенте (in-memory), сервер stateless. На каждом send шлём
- * всю историю кроме error-сообщений (это локальные UI-маркеры, не реплики).
+ * История — на клиенте, persist в `sessionStorage` чтобы переживать
+ * навигацию между экранами в одной вкладке (но не вкладку-перезагрузку).
+ * Сервер stateless — на каждом send шлём всю историю кроме error-маркеров.
  *
  * После каждого ответа ассистента инвалидируем кеш рекомендаций — LLM мог
  * через function-calling изменить профиль (`recalculate_with_changes`).
  */
 export function useChatSession() {
   const queryClient = useQueryClient()
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [messages, setMessages] = usePersistentState<ChatMessage[]>(
+    'chat.history',
+    [],
+  )
 
   const sendMut = useMutation({
     mutationFn: chatApi.send,
@@ -67,7 +72,7 @@ export function useChatSession() {
 
       sendMut.mutate({ message: trimmed, history })
     },
-    [messages, sendMut],
+    [messages, sendMut, setMessages],
   )
 
   const retry = useCallback(() => {
@@ -90,9 +95,9 @@ export function useChatSession() {
       .filter((m) => m.role !== 'error')
       .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
     sendMut.mutate({ message: lastUser.content, history })
-  }, [messages, sendMut])
+  }, [messages, sendMut, setMessages])
 
-  const clear = useCallback(() => setMessages([]), [])
+  const clear = useCallback(() => setMessages([]), [setMessages])
 
   return {
     messages,

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { CircleNotch, Lightning } from '@phosphor-icons/react'
 import { PageTopBar } from '@/components/common/PageTopBar'
 import {
@@ -13,6 +12,7 @@ import { ProfileInputForm } from '@/features/simulator/ProfileInputForm'
 import { RulesTracePanel } from '@/features/simulator/RulesTracePanel'
 import { useSimulator } from '@/features/simulator/useSimulator'
 import { PRESETS } from '@/features/simulator/presets'
+import { usePersistentState } from '@/hooks/usePersistentState'
 
 const PLACEHOLDER_PRESET = '__custom__'
 
@@ -30,7 +30,10 @@ const PLACEHOLDER_PRESET = '__custom__'
  */
 export default function SimulatorPage() {
   const initial = PRESETS[0]!.profile
-  const [activePresetId, setActivePresetId] = useState<string>(PRESETS[0]!.id)
+  const [activePresetId, setActivePresetId] = usePersistentState<string>(
+    'admin.simulator.preset',
+    PRESETS[0]!.id,
+  )
   const { profile, update, replace, result, isPending } = useSimulator(initial)
 
   const onPresetChange = (id: string) => {
@@ -51,7 +54,7 @@ export default function SimulatorPage() {
   const trace = result?.trace ?? null
 
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col">
       <PageTopBar
         title="Симулятор ЭС"
         icon={<Lightning size={18} weight="regular" />}
@@ -64,7 +67,7 @@ export default function SimulatorPage() {
           ) : null
         }
       />
-      <div className="grid h-[calc(100svh-58px)] grid-cols-[320px_1fr_380px] overflow-hidden">
+      <div className="grid min-h-0 flex-1 grid-cols-[320px_1fr_380px] overflow-hidden">
         {/* Левая колонка: форма + пресеты */}
         <aside className="flex flex-col gap-[var(--space-lg)] overflow-y-auto border-r border-[color:var(--color-border)] px-[var(--space-base)] py-[var(--space-lg)]">
           <div className="flex flex-col gap-[var(--space-xs)]">
@@ -125,6 +128,6 @@ export default function SimulatorPage() {
           />
         </aside>
       </div>
-    </>
+    </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
+import { usePersistentState } from '@/hooks/usePersistentState'
 import { simulatorApi } from './api'
 import type { EvaluateDebugResponse, SimulatorProfile } from '@/types/api'
 
@@ -10,11 +11,15 @@ const DEBOUNCE_MS = 250
  * Управляет state профиля симулятора + debounced запуск /expert/evaluate/debug.
  * При каждом «спокойном» изменении профиля (250ms без правок) — пересчёт.
  *
- * Используем useMutation, чтобы держать ОДИН результат (последний). Не useQuery,
- * иначе кеш растёт линейно при каждом изменении формы.
+ * Profile persist'ится в `sessionStorage` — настроенные X1-X12 переживают
+ * навигацию по другим экранам админки. Result не persist'им: его дешевле
+ * пересчитать на mount (debounced effect отстреливает сам).
  */
 export function useSimulator(initial: SimulatorProfile) {
-  const [profile, setProfile] = useState<SimulatorProfile>(initial)
+  const [profile, setProfile] = usePersistentState<SimulatorProfile>(
+    'admin.simulator.profile',
+    initial,
+  )
   const [result, setResult] = useState<EvaluateDebugResponse | null>(null)
   const debouncedProfile = useDebouncedValue(profile, DEBOUNCE_MS)
 

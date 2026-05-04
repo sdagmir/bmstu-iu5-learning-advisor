@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { usePersistentState } from '@/hooks/usePersistentState'
 import {
   CaretDown,
   CaretUp,
@@ -52,7 +53,12 @@ export function SandboxPanel({
   onSelectRule,
 }: SandboxPanelProps) {
   const [formCollapsed, setFormCollapsed] = useState(false)
-  const [preset, setPreset] = useState<string>(PLACEHOLDER_PRESET)
+  // Preset persist'им в sessionStorage в паре с профилем (см. RulesPage),
+  // чтобы dropdown показывал тот же выбор после возврата на экран.
+  const [preset, setPreset] = usePersistentState<string>(
+    'admin.rules.sandbox-preset',
+    PLACEHOLDER_PRESET,
+  )
 
   const onPresetChange = (id: string) => {
     if (id === PLACEHOLDER_PRESET) return

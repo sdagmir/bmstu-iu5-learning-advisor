@@ -206,4 +206,18 @@
   summary {
     cursor: pointer;
   }
+
+  /* Textarea: в современных браузерах автоматически растёт под контент
+     и сжимается обратно — без ручного перетаскивания. Где не поддержано
+     (старый Safari) — fallback на resize-y из утилиты. Курсор — text-cursor
+     на теле, видимый resize-handle снизу-справа. */
+  textarea {
+    cursor: text;
+    field-sizing: content;
+  }
+
+  textarea::-webkit-resizer {
+    background-color: var(--color-border-strong);
+    border-radius: 0 0 6px 0;
+  }
 }
