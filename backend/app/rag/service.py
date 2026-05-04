@@ -46,13 +46,25 @@ DOCUMENTS_CACHE_TTL = 60.0
 SEARCH_RELATIVE_THRESHOLD = 0.5
 
 
+# Сепараторы в порядке приоритета: сначала границы абзацев, потом
+# предложений, потом слов. Разрыв абзаца (\n\n) — лучшая семантическая
+# граница и должна предпочитаться даже если предложение могло бы влезть.
+_CHUNK_SEPARATORS = ("\n\n", ".\n", ". ", "\n", " ")
+
+
 def split_into_chunks(
     text: str,
     *,
     chunk_size: int = CHUNK_SIZE,
     overlap: int = CHUNK_OVERLAP,
 ) -> list[str]:
-    """Разбить текст на чанки с перекрытием по границам предложений."""
+    """Разбить текст на чанки с перекрытием по границам абзацев/предложений.
+
+    Граница чанка — поздний сепаратор во второй половине окна chunk_size,
+    приоритет от абзаца к слову. Overlap тоже привязан к ближайшей границе
+    в `[end-overlap, end]` — иначе чанк начинается с обрывка слова и
+    выглядит как мусор в UI и в LLM-промпте.
+    """
     if not text.strip():
         return []
 
@@ -64,17 +76,36 @@ def split_into_chunks(
         end = start + chunk_size
 
         if end < text_len:
-            for sep in (". ", ".\n", "\n\n", "\n", " "):
-                last_sep = text.rfind(sep, start + chunk_size // 2, end)
-                if last_sep != -1:
-                    end = last_sep + len(sep)
+            # Поздняя граница во второй половине окна, приоритет paragraph > sentence
+            min_end = start + chunk_size // 2
+            for sep in _CHUNK_SEPARATORS:
+                pos = text.rfind(sep, min_end, end)
+                if pos != -1:
+                    end = pos + len(sep)
                     break
 
         chunk = text[start:end].strip()
         if chunk:
             chunks.append(chunk)
 
-        start = end - overlap if end < text_len else text_len
+        if end >= text_len:
+            break
+
+        # Старт следующего чанка: ~overlap символов назад, но привязан
+        # к границе. Если в окне [end-overlap, end] нет ни одной границы —
+        # стартуем с end (без overlap), не разрезая слово.
+        ideal = max(start + 1, end - overlap)
+        next_start = end
+        for sep in _CHUNK_SEPARATORS:
+            pos = text.find(sep, ideal, end)
+            if pos != -1:
+                next_start = pos + len(sep)
+                break
+
+        # Защита от зацикливания: следующий старт должен двигаться вперёд
+        if next_start <= start:
+            next_start = end
+        start = next_start
 
     return chunks
 
