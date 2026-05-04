@@ -3,23 +3,25 @@ import { CircleNotch, FilePlus, Trash } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
-import { useRagDelete, useRagUpload } from './useKnowledge'
+import { useRagDelete, useRagDocuments, useRagUpload } from './useKnowledge'
+import type { RagDocumentSummary } from '@/types/api'
 
 /**
  * Управление документами RAG. Загрузка по `source` + длинному тексту,
- * удаление по `source`. Список загруженных документов на бэке отдельным
- * эндпоинтом не отдаётся (TODO бэка `GET /rag/documents`) — поэтому
- * показываем только формы.
+ * inline-удаление из реального списка проиндексированных источников
+ * (`GET /rag/documents`).
  */
 export function DocumentManager() {
+  const docs = useRagDocuments()
   const upload = useRagUpload()
   const remove = useRagDelete()
 
   const [source, setSource] = useState('')
   const [text, setText] = useState('')
-  const [deleteSource, setDeleteSource] = useState('')
-  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null)
 
   const submitUpload = (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,12 +37,6 @@ export function DocumentManager() {
     )
   }
 
-  const submitDelete = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!deleteSource.trim()) return
-    setConfirmOpen(true)
-  }
-
   return (
     <section className="flex flex-col gap-[var(--space-lg)]">
       <header className="flex flex-col gap-[var(--space-xs)]">
@@ -52,6 +48,22 @@ export function DocumentManager() {
           по уникальному `source`.
         </p>
       </header>
+
+      {/* Список проиндексированных источников */}
+      <div className="flex flex-col gap-[var(--space-sm)] rounded-[8px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+        <div className="flex items-center justify-between gap-[var(--space-base)] border-b border-[color:var(--color-border)] px-[var(--space-base)] py-[var(--space-sm)]">
+          <span className="text-[length:var(--text-xs)] tracking-wider text-[color:var(--color-text-subtle)] uppercase">
+            Проиндексировано {docs.data ? `· ${docs.data.length}` : ''}
+          </span>
+        </div>
+        <DocumentList
+          docs={docs.data}
+          isLoading={docs.isLoading}
+          isError={docs.isError}
+          onAskDelete={setPendingDelete}
+          deletingSource={remove.isPending ? pendingDelete : null}
+        />
+      </div>
 
       {/* Upload */}
       <form
@@ -67,7 +79,8 @@ export function DocumentManager() {
             disabled={upload.isPending}
           />
           <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
-            Уникальная строка-идентификатор. Используется для удаления.
+            Уникальная строка-идентификатор. При повторной загрузке с тем же
+            `source` старые чанки заменяются.
           </span>
         </div>
         <div className="flex flex-col gap-[var(--space-xs)]">
@@ -96,60 +109,119 @@ export function DocumentManager() {
         </div>
       </form>
 
-      {/* Delete */}
-      <form
-        onSubmit={submitDelete}
-        className="flex flex-col gap-[var(--space-sm)] rounded-[8px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-[var(--space-base)]"
-      >
-        <div className="flex flex-col gap-[var(--space-xs)]">
-          <Label className="text-[length:var(--text-sm)]">
-            Удалить по источнику
-          </Label>
-          <div className="flex gap-[var(--space-sm)]">
-            <Input
-              value={deleteSource}
-              onChange={(e) => setDeleteSource(e.target.value)}
-              placeholder="docs/syllabus/iu5-ml-introduction.md"
-              disabled={remove.isPending}
-            />
-            <Button
-              type="submit"
-              variant="destructive"
-              disabled={remove.isPending || !deleteSource.trim()}
-            >
-              {remove.isPending ? (
-                <CircleNotch size={14} className="animate-spin" />
-              ) : (
-                <Trash size={14} />
-              )}
-              Удалить
-            </Button>
-          </div>
-          <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
-            Когда бэк отдаст GET /rag/documents — здесь появится полноценный
-            список с inline-удалением.
-          </span>
-        </div>
-      </form>
-
       <ConfirmDialog
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
-        title={`Удалить «${deleteSource}»?`}
+        open={pendingDelete !== null}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+        title={pendingDelete ? `Удалить «${pendingDelete}»?` : ''}
         description="Все чанки этого источника пропадут из базы знаний."
         confirmLabel="Удалить"
         variant="danger"
         loading={remove.isPending}
         onConfirm={() => {
-          remove.mutate(deleteSource.trim(), {
-            onSuccess: () => {
-              setDeleteSource('')
-              setConfirmOpen(false)
-            },
-            onSettled: () => setConfirmOpen(false),
+          if (!pendingDelete) return
+          remove.mutate(pendingDelete, {
+            onSettled: () => setPendingDelete(null),
           })
         }}
       />
     </section>
   )
+}
+
+interface DocumentListProps {
+  docs: RagDocumentSummary[] | undefined
+  isLoading: boolean
+  isError: boolean
+  onAskDelete: (source: string) => void
+  deletingSource: string | null
+}
+
+function DocumentList({
+  docs,
+  isLoading,
+  isError,
+  onAskDelete,
+  deletingSource,
+}: DocumentListProps) {
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-[var(--space-xs)] p-[var(--space-base)]">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-9 w-full" />
+        ))}
+      </div>
+    )
+  }
+  if (isError) {
+    return (
+      <p className="px-[var(--space-base)] py-[var(--space-md)] text-[length:var(--text-sm)] text-[color:var(--color-danger)]">
+        Не удалось загрузить список документов.
+      </p>
+    )
+  }
+  if (!docs || docs.length === 0) {
+    return (
+      <p className="px-[var(--space-base)] py-[var(--space-md)] text-[length:var(--text-sm)] text-[color:var(--color-text-subtle)]">
+        Пусто. Загрузи первый документ ниже.
+      </p>
+    )
+  }
+
+  return (
+    <ul className="flex flex-col">
+      {docs.map((d) => (
+        <li
+          key={d.source}
+          className="flex items-center justify-between gap-[var(--space-base)] border-b border-[color:var(--color-border)] px-[var(--space-base)] py-[var(--space-sm)] last:border-b-0"
+        >
+          <div className="flex min-w-0 flex-col gap-[2px]">
+            <span className="truncate font-mono text-[length:var(--text-sm)] text-[color:var(--color-text)]">
+              {d.source}
+            </span>
+            <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)] tabular-nums">
+              {d.chunks_count}{' '}
+              {chunkLabel(d.chunks_count)}
+              {d.indexed_at && ` · ${formatDate(d.indexed_at)}`}
+            </span>
+          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onAskDelete(d.source)}
+                disabled={deletingSource === d.source}
+                aria-label={`Удалить документ ${d.source}`}
+              >
+                {deletingSource === d.source ? (
+                  <CircleNotch size={14} className="animate-spin" />
+                ) : (
+                  <Trash size={14} className="text-[color:var(--color-danger)]" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Удалить документ</TooltipContent>
+          </Tooltip>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function chunkLabel(n: number): string {
+  const mod10 = n % 10
+  const mod100 = n % 100
+  if (mod10 === 1 && mod100 !== 11) return 'чанк'
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'чанка'
+  return 'чанков'
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }

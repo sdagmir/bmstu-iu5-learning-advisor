@@ -244,6 +244,71 @@ export interface RagStats {
   total_chunks: number
 }
 
+/** `GET /rag/documents` — агрегат по уникальному source. */
+export interface RagDocumentSummary {
+  source: string
+  chunks_count: number
+  indexed_at: string | null
+}
+
+// --- Coverage (студент, GET /users/me/coverage) ---
+
+export interface CompetencyCoverageItem {
+  competency_id: string
+  name: string
+  category: CompetencyCategory
+  has: boolean
+  needed: boolean
+}
+
+export interface CoverageResponse {
+  items: CompetencyCoverageItem[]
+  /** 0–100, % покрытия целевого профиля */
+  coverage_percent: number
+}
+
+// --- История рекомендаций (студент, GET /expert/recommendations/history) ---
+
+export interface RecommendationSnapshot {
+  id: string
+  created_at: string
+  recommendations: Recommendation[]
+  /** Человекочитаемая строка вида «Цель: backend → ml; Семестр: 4 → 5» */
+  profile_change_summary: string | null
+}
+
+// --- LLM-трейсы (admin, GET /admin/traces) ---
+
+export type TraceEndpoint = 'message' | 'message/debug'
+export type TraceStatus = 'ok' | 'error' | 'timeout'
+
+/** Запись в ленте `/admin/traces`. */
+export interface TraceSummary {
+  id: string
+  created_at: string
+  user_email: string
+  endpoint: TraceEndpoint
+  latency_ms: number
+  status: TraceStatus
+  rules_fired_count: number
+  request_preview: string
+}
+
+/** Полная запись `/admin/traces/{id}`. */
+export interface TraceDetail {
+  id: string
+  created_at: string
+  user_id: string
+  user_email: string
+  endpoint: TraceEndpoint
+  request_message: string
+  response_text: string
+  debug: ChatReplyDebug | null
+  latency_ms: number
+  status: TraceStatus
+  model_name: string | null
+}
+
 // --- Admin: Каталог (Phase 9) ---
 
 /** Категория компетенции (бэк: `CompetencyCategory`). */
@@ -376,6 +441,10 @@ export type RuleGroup =
  * Правило ЭС — полное представление из `GET /admin/rules`.
  * `condition` и `recommendation` — свободные JSON-объекты,
  * валидируем структуру локально через zod.
+ *
+ * `trigger_count` — счётчик срабатываний в production-движке
+ * (только при `GET /expert/my-recommendations`). Не растёт у
+ * preview/sandbox/what-if вызовов.
  */
 export interface Rule {
   id: string
@@ -388,6 +457,7 @@ export interface Rule {
   priority: number
   is_active: boolean
   is_published: boolean
+  trigger_count: number
 }
 
 /** POST /admin/rules — все обязательные поля. */

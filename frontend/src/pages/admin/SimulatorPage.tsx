@@ -12,6 +12,7 @@ import { ProfileInputForm } from '@/features/simulator/ProfileInputForm'
 import { RulesTracePanel } from '@/features/simulator/RulesTracePanel'
 import { useSimulator } from '@/features/simulator/useSimulator'
 import { PRESETS } from '@/features/simulator/presets'
+import { useRules } from '@/features/rules/useRules'
 import { usePersistentState } from '@/hooks/usePersistentState'
 
 const PLACEHOLDER_PRESET = '__custom__'
@@ -35,6 +36,8 @@ export default function SimulatorPage() {
     PRESETS[0]!.id,
   )
   const { profile, update, replace, result, isPending } = useSimulator(initial)
+  // Подтягиваем все правила, чтобы прокинуть trigger_count в admin-карточки
+  const { data: rules } = useRules()
 
   const onPresetChange = (id: string) => {
     if (id === PLACEHOLDER_PRESET) return
@@ -112,9 +115,18 @@ export default function SimulatorPage() {
             </div>
           ) : (
             <div className="flex flex-col">
-              {recommendations.map((rec) => (
-                <RecommendationCard key={rec.rule_id} recommendation={rec} mode="admin" />
-              ))}
+              {recommendations.map((rec) => {
+                const num = Number((rec.rule_id.match(/\d+/) ?? [])[0])
+                const rule = rules?.find((r) => r.number === num)
+                return (
+                  <RecommendationCard
+                    key={rec.rule_id}
+                    recommendation={rec}
+                    mode="admin"
+                    triggerCount={rule?.trigger_count}
+                  />
+                )
+              })}
             </div>
           )}
         </main>

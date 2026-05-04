@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link } from 'react-router-dom'
 import { CircleNotch } from '@phosphor-icons/react'
+import { toast } from 'sonner'
 import { Logo } from '@/components/common/Logo'
 import { FormField } from '@/components/common/FormField'
 import { Input } from '@/components/ui/input'
@@ -12,7 +13,7 @@ import { ApiError, ValidationError } from '@/lib/api-client'
 import { routes } from '@/constants/routes'
 
 export default function LoginPage() {
-  const { login } = useAuth()
+  const { login, demoLogin } = useAuth()
   const {
     register,
     handleSubmit,
@@ -25,6 +26,20 @@ export default function LoginPage() {
   })
 
   const isPending = login.isPending || isSubmitting
+  const isDemoPending = demoLogin.isPending
+
+  const onDemoClick = () => {
+    demoLogin.mutate(undefined, {
+      onError: (err) => {
+        // 404 — флаг DEMO_ACCOUNT_ENABLED выключен на бэке. Сообщаем мягко.
+        if (err instanceof ApiError && err.status === 404) {
+          toast.info('Демо-режим выключен на этом сервере')
+          return
+        }
+        toast.error('Не получилось зайти в демо. Попробуй чуть позже.')
+      },
+    })
+  }
 
   const onSubmit = (data: LoginInput) => {
     login.mutate(data, {
@@ -100,7 +115,7 @@ export default function LoginPage() {
 
         <Button
           type="submit"
-          disabled={isPending}
+          disabled={isPending || isDemoPending}
           className="mt-[var(--space-sm)] h-10 w-full text-[length:var(--text-base)]"
         >
           {isPending ? (
@@ -113,6 +128,34 @@ export default function LoginPage() {
           )}
         </Button>
       </form>
+
+      <div className="my-[var(--space-lg)] flex items-center gap-[var(--space-sm)]">
+        <div className="h-px flex-1 bg-[color:var(--color-border)]" />
+        <span className="text-[length:var(--text-xs)] tracking-wider text-[color:var(--color-text-subtle)] uppercase">
+          или
+        </span>
+        <div className="h-px flex-1 bg-[color:var(--color-border)]" />
+      </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onDemoClick}
+        disabled={isPending || isDemoPending}
+        className="h-10 w-full text-[length:var(--text-base)]"
+      >
+        {isDemoPending ? (
+          <>
+            <CircleNotch size={16} weight="regular" className="animate-spin" />
+            Заходим...
+          </>
+        ) : (
+          'Демо для комиссии'
+        )}
+      </Button>
+      <p className="mt-[var(--space-xs)] text-center text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
+        Один клик — заходишь в готовый профиль 5-го семестра, цель ML.
+      </p>
 
       <p className="mt-[var(--space-xl)] text-[length:var(--text-sm)] text-[color:var(--color-text-muted)]">
         Нет аккаунта?{' '}

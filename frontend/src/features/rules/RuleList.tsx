@@ -189,9 +189,16 @@ const RuleRow = memo(function RuleRow({ rule, isSelected, onSelect }: RuleRowPro
       >
         {rule.name}
       </span>
-      <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
-        {RULE_GROUP_LABELS[rule.group]}
-      </span>
+      <div className="flex w-full items-center justify-between gap-[var(--space-sm)]">
+        <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
+          {RULE_GROUP_LABELS[rule.group]}
+        </span>
+        {rule.trigger_count > 0 && (
+          <span className="text-[length:var(--text-xs)] tabular-nums text-[color:var(--color-text-subtle)]">
+            сработало {rule.trigger_count}×
+          </span>
+        )}
+      </div>
     </button>
   )
 })

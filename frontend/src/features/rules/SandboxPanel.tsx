@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { usePersistentState } from '@/hooks/usePersistentState'
 import {
   CaretDown,
@@ -19,6 +21,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ProfileInputForm } from '@/features/simulator/ProfileInputForm'
 import { PRESETS } from '@/features/simulator/presets'
 import { RecommendationCard } from '@/features/recommendation/RecommendationCard'
+import { adminCatalogApi } from '@/features/catalog/adminApi'
 import { FiredRulesList } from './FiredRulesList'
 import { cn } from '@/lib/utils'
 import type { Rule, RulePreviewResponse, SimulatorProfile } from '@/types/api'
@@ -42,6 +45,8 @@ const PLACEHOLDER_PRESET = '__custom__'
  * пересчёта на каждое изменение поля: эксперт явно жмёт «прогнать», иначе
  * на сложных правилах накопится много preview-вызовов.
  */
+const STUDENT_PLACEHOLDER = '__none__'
+
 export function SandboxPanel({
   profile,
   onProfileChange,
@@ -60,12 +65,40 @@ export function SandboxPanel({
     PLACEHOLDER_PRESET,
   )
 
+  // Список студентов для «загрузить из студента» — лениво, по факту
+  // открытия Sandbox-экрана. Кэш TanStack бережёт от повторных запросов.
+  const usersQuery = useQuery({
+    queryKey: ['admin', 'users', 'sandbox'],
+    queryFn: adminCatalogApi.users.list,
+    staleTime: 60_000,
+  })
+  const students = (usersQuery.data ?? []).filter((u) => u.role === 'student')
+  const [loadingStudentId, setLoadingStudentId] = useState<string | null>(null)
+
   const onPresetChange = (id: string) => {
     if (id === PLACEHOLDER_PRESET) return
     const p = PRESETS.find((x) => x.id === id)
     if (!p) return
     setPreset(id)
     onProfileReplace(p.profile)
+  }
+
+  const onStudentSelect = async (id: string) => {
+    if (id === STUDENT_PLACEHOLDER) return
+    setLoadingStudentId(id)
+    try {
+      const snapshot = await adminCatalogApi.users.profileSnapshot(id)
+      onProfileReplace(snapshot)
+      setPreset(PLACEHOLDER_PRESET)
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Не удалось загрузить профиль студента',
+      )
+    } finally {
+      setLoadingStudentId(null)
+    }
   }
 
   const handleProfileChange = (patch: Partial<SimulatorProfile>) => {
@@ -123,6 +156,46 @@ export function SandboxPanel({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="flex flex-col gap-[var(--space-xs)]">
+              <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
+                Загрузить из студента
+              </span>
+              <Select
+                value={loadingStudentId ?? STUDENT_PLACEHOLDER}
+                onValueChange={onStudentSelect}
+                disabled={
+                  usersQuery.isLoading ||
+                  loadingStudentId !== null ||
+                  students.length === 0
+                }
+              >
+                <SelectTrigger size="sm" className="w-full">
+                  <SelectValue
+                    placeholder={
+                      usersQuery.isLoading
+                        ? 'Загружаем…'
+                        : students.length === 0
+                          ? 'Нет студентов в БД'
+                          : 'Выбрать студента по email…'
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {students.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {loadingStudentId && (
+                <span className="flex items-center gap-[var(--space-xs)] text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
+                  <CircleNotch size={12} className="animate-spin" /> Подтягиваем
+                  X1–X12 студента…
+                </span>
+              )}
             </div>
 
             <ProfileInputForm profile={profile} onChange={handleProfileChange} />
@@ -186,18 +259,25 @@ export function SandboxPanel({
                 </p>
               ) : (
                 <div className="flex flex-col gap-[var(--space-xs)]">
-                  {result.recommendations.map((rec) => (
-                    <RecommendationCard
-                      key={rec.rule_id}
-                      recommendation={rec}
-                      mode="admin"
-                      onRuleClick={(rid) => {
-                        const num = Number((rid.match(/\d+/) ?? [])[0])
-                        const rule = rules?.find((r) => r.number === num)
-                        if (rule) onSelectRule(rule.id)
-                      }}
-                    />
-                  ))}
+                  {result.recommendations.map((rec) => {
+                    // rec.rule_id формата "R12" → находим Rule по number,
+                    // чтобы прокинуть trigger_count в admin-карточку
+                    const num = Number((rec.rule_id.match(/\d+/) ?? [])[0])
+                    const rule = rules?.find((r) => r.number === num)
+                    return (
+                      <RecommendationCard
+                        key={rec.rule_id}
+                        recommendation={rec}
+                        mode="admin"
+                        triggerCount={rule?.trigger_count}
+                        onRuleClick={(rid) => {
+                          const n = Number((rid.match(/\d+/) ?? [])[0])
+                          const r = rules?.find((x) => x.number === n)
+                          if (r) onSelectRule(r.id)
+                        }}
+                      />
+                    )
+                  })}
                 </div>
               )}
             </div>

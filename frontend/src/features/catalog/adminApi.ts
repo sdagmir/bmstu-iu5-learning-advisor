@@ -12,6 +12,7 @@ import type {
   AdminFocusAdviceCreate,
   AdminUser,
   AdminUserUpdate,
+  SimulatorProfile,
 } from '@/types/api'
 
 /**
@@ -80,5 +81,8 @@ export const adminCatalogApi = {
     list: () => apiFetch<AdminUser[]>('/admin/users'),
     update: (id: string, body: AdminUserUpdate) =>
       apiFetch<AdminUser>(`/admin/users/${id}`, patchJson(body)),
+    /** Полный X1–X12 профиль студента — для «загрузить из студента» в SandboxPanel. */
+    profileSnapshot: (id: string) =>
+      apiFetch<SimulatorProfile>(`/admin/users/${id}/profile-snapshot`),
   },
 }

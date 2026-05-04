@@ -8,12 +8,21 @@ import type {
 } from '@/types/api'
 
 const STATS_KEY = ['admin', 'rag', 'stats'] as const
+const DOCS_KEY = ['admin', 'rag', 'documents'] as const
 
 export function useRagStats() {
   return useQuery({
     queryKey: STATS_KEY,
     queryFn: knowledgeApi.stats,
     staleTime: 30_000,
+  })
+}
+
+export function useRagDocuments() {
+  return useQuery({
+    queryKey: DOCS_KEY,
+    queryFn: () => knowledgeApi.list(),
+    staleTime: 15_000,
   })
 }
 
@@ -33,6 +42,7 @@ export function useRagUpload() {
     onSuccess: (data) => {
       toast.success(`Документ «${data.source}» проиндексирован: ${data.chunks_count} чанков`)
       void queryClient.invalidateQueries({ queryKey: STATS_KEY })
+      void queryClient.invalidateQueries({ queryKey: DOCS_KEY })
     },
     onError: (err: Error) => toast.error(err.message || 'Не удалось загрузить документ'),
   })
@@ -46,6 +56,7 @@ export function useRagDelete() {
     onSuccess: (_, source) => {
       toast.success(`Документ «${source}» удалён`)
       void queryClient.invalidateQueries({ queryKey: STATS_KEY })
+      void queryClient.invalidateQueries({ queryKey: DOCS_KEY })
     },
     onError: (err: Error) => toast.error(err.message || 'Не удалось удалить документ'),
   })

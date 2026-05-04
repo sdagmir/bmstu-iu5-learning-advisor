@@ -57,6 +57,18 @@ export function useAuth() {
     },
   })
 
+  const demoLogin = useMutation({
+    mutationFn: async () => {
+      const tokens = await authApi.demoLogin()
+      return await completeAuth(tokens)
+    },
+    onSuccess: (user) => {
+      navigate(isProfileMinimallyComplete(user) ? routes.home : routes.onboarding, {
+        replace: true,
+      })
+    },
+  })
+
   const register = useMutation({
     mutationFn: async (body: RegisterRequest) => {
       const tokens = await authApi.register(body)
@@ -86,5 +98,5 @@ export function useAuth() {
     },
   })
 
-  return { login, register, logout }
+  return { login, register, logout, demoLogin }
 }
