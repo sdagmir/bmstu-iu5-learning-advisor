@@ -29,7 +29,7 @@ export const competenciesConfig: EntityConfig<AdminCompetency, AdminCompetencyCr
       key: 'category',
       label: 'Категория',
       width: 200,
-      render: (row) => COMPETENCY_CATEGORY_LABELS[row.category],
+      render: (row) => COMPETENCY_CATEGORY_LABELS[row.category] ?? '—',
     },
   ],
   fields: [

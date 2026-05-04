@@ -31,7 +31,7 @@ export const usersConfig: EntityConfig<AdminUser, AdminUserUpdate> = {
       key: 'role',
       label: 'Роль',
       width: 140,
-      render: (row) => USER_ROLE_LABELS[row.role],
+      render: (row) => USER_ROLE_LABELS[row.role] ?? '—',
     },
     {
       key: 'is_active',

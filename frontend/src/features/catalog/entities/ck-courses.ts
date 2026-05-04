@@ -40,20 +40,20 @@ export const ckCoursesConfig: EntityConfig<AdminCKCourse, AdminCKCourseCreate> =
       key: 'category',
       label: 'Категория',
       width: 180,
-      render: (row) => CK_CATEGORY_LABELS[row.category],
+      render: (row) => CK_CATEGORY_LABELS[row.category] ?? '—',
     },
-    { key: 'credits', label: 'ЗЕТ', mono: true, width: 60 },
+    { key: 'credits', label: 'ЕЗ', mono: true, width: 60 },
     {
       key: 'competencies',
       label: 'Закрывает',
       width: 120,
-      render: (row) => `${row.competencies.length} шт`,
+      render: (row) => `${row.competencies?.length ?? 0} шт`,
     },
     {
       key: 'prerequisites',
       label: 'Prereq',
       width: 100,
-      render: (row) => `${row.prerequisites.length} шт`,
+      render: (row) => `${row.prerequisites?.length ?? 0} шт`,
     },
   ],
   fields: [
@@ -74,7 +74,7 @@ export const ckCoursesConfig: EntityConfig<AdminCKCourse, AdminCKCourseCreate> =
     },
     {
       name: 'credits',
-      label: 'ЗЕТ',
+      label: 'Единицы занятости',
       type: 'number',
     },
     {
@@ -103,8 +103,8 @@ export const ckCoursesConfig: EntityConfig<AdminCKCourse, AdminCKCourseCreate> =
     description: row.description,
     category: row.category,
     credits: row.credits,
-    competency_ids: row.competencies.map((c) => c.id),
-    prerequisite_ids: row.prerequisites.map((c) => c.id),
+    competency_ids: row.competencies?.map((c) => c.id) ?? [],
+    prerequisite_ids: row.prerequisites?.map((c) => c.id) ?? [],
   }),
   emptyFormValues: () => ({
     name: '',

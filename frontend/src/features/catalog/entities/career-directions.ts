@@ -35,7 +35,7 @@ export const careerDirectionsConfig: EntityConfig<
       key: 'competencies',
       label: 'Целевые компетенции',
       width: 180,
-      render: (row) => `${row.competencies.length} шт`,
+      render: (row) => `${row.competencies?.length ?? 0} шт`,
     },
   ],
   fields: [
@@ -68,7 +68,7 @@ export const careerDirectionsConfig: EntityConfig<
     name: row.name,
     description: row.description,
     example_jobs: row.example_jobs,
-    competency_ids: row.competencies.map((c) => c.id),
+    competency_ids: row.competencies?.map((c) => c.id) ?? [],
   }),
   emptyFormValues: () => ({
     name: '',

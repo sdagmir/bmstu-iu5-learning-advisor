@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { cn } from '@/lib/utils'
 import {
   Select,
   SelectContent,
@@ -146,6 +147,40 @@ function FieldRow<TForm extends Record<string, unknown>>({
 }: FieldRowProps<TForm>) {
   const name = field.name as Path<TForm>
 
+  // Switch — inline-строка: лейбл слева растягивается, control справа фикс-ширины.
+  // Иначе одинокий 32px-свитч под полноширинным лейблом смотрится сиротой.
+  if (field.type === 'switch') {
+    return (
+      <div className="flex flex-col gap-[var(--space-xs)]">
+        <div className="flex items-center justify-between gap-[var(--space-base)]">
+          <Label className="text-[length:var(--text-sm)]">{field.label}</Label>
+          <Controller
+            control={control}
+            name={name}
+            render={({ field: f }) => (
+              <Switch
+                checked={Boolean(f.value)}
+                onCheckedChange={f.onChange}
+                disabled={readOnly}
+                className="shrink-0"
+              />
+            )}
+          />
+        </div>
+        {field.hint && (
+          <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
+            {field.hint}
+          </span>
+        )}
+        {error && (
+          <span className="text-[length:var(--text-xs)] text-[color:var(--color-danger)]">
+            {error}
+          </span>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-[var(--space-xs)]">
       <Label className="text-[length:var(--text-sm)]">{field.label}</Label>
@@ -194,21 +229,6 @@ function FieldRow<TForm extends Record<string, unknown>>({
           placeholder={field.placeholder}
           {...register(name)}
           className="w-full resize-y rounded-[6px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-[var(--space-md)] py-[var(--space-sm)] text-[length:var(--text-sm)] leading-relaxed text-[color:var(--color-text)] outline-none focus-visible:border-[color:var(--color-primary)] focus-visible:ring-[3px] focus-visible:ring-[color:var(--color-primary-soft)] disabled:cursor-not-allowed disabled:opacity-60"
-        />
-      )
-    }
-    if (field.type === 'switch') {
-      return (
-        <Controller
-          control={control}
-          name={name}
-          render={({ field: f }) => (
-            <Switch
-              checked={Boolean(f.value)}
-              onCheckedChange={f.onChange}
-              disabled={readOnly}
-            />
-          )}
         />
       )
     }
@@ -316,8 +336,12 @@ function ChipMultiSelect({ value, onChange, options, disabled }: ChipMultiSelect
     )
   }
 
+  // Грид с равными колонками: ширина каждого чипа автоматически одинаковая
+  // (по самой широкой ячейке через `minmax(0,1fr)`), длинные лейблы переносятся
+  // на 2 строки (`line-clamp-2`). Высота строки фикс через `auto-rows`, чтобы
+  // одно- и двухстрочные чипы смотрелись одинаковой высоты.
   return (
-    <div className="flex flex-wrap gap-[var(--space-xs)]">
+    <div className="grid auto-rows-11 grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-[var(--space-xs)]">
       {resolved.map((o) => {
         const isOn = set.has(o.value)
         return (
@@ -327,14 +351,15 @@ function ChipMultiSelect({ value, onChange, options, disabled }: ChipMultiSelect
             onClick={() => toggle(o.value)}
             disabled={disabled}
             aria-pressed={isOn}
-            className={
-              'rounded-[999px] border px-[var(--space-md)] py-[var(--space-xs)] text-[length:var(--text-sm)] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ' +
-              (isOn
-                ? 'border-[color:var(--color-primary)] bg-[color:var(--color-primary-soft)] text-[color:var(--color-primary)]'
-                : 'border-[color:var(--color-border)] text-[color:var(--color-text-muted)] hover:border-[color:var(--color-border-strong)] hover:text-[color:var(--color-text)]')
-            }
+            title={o.label}
+            className={cn(
+              'flex h-full min-w-0 items-center justify-center rounded-[999px] border px-[var(--space-md)] text-center text-[length:var(--text-sm)] leading-tight transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+              isOn
+                ? 'border-[color:var(--color-primary)] bg-[color:var(--color-primary-soft)] font-medium text-[color:var(--color-primary)]'
+                : 'border-[color:var(--color-border)] text-[color:var(--color-text-muted)] hover:border-[color:var(--color-border-strong)] hover:text-[color:var(--color-text)]',
+            )}
           >
-            {o.label}
+            <span className="line-clamp-2">{o.label}</span>
           </button>
         )
       })}

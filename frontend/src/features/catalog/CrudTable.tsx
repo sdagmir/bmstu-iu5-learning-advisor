@@ -95,17 +95,17 @@ export function CrudTable<TRead extends { id: string }, TForm extends Record<str
 
   return (
     <div className="flex flex-col gap-[var(--space-base)] px-[var(--space-2xl)] py-[var(--space-lg)]">
-      <div className="flex items-center gap-[var(--space-base)]">
-        <div className="relative w-[320px]">
+      <div className="flex flex-wrap items-center gap-[var(--space-base)]">
+        <div className="relative min-w-[200px] flex-1 sm:max-w-[360px]">
           <MagnifyingGlass
             size={14}
-            className="pointer-events-none absolute top-1/2 left-[10px] -translate-y-1/2 text-[color:var(--color-text-subtle)]"
+            className="pointer-events-none absolute top-1/2 left-[var(--space-sm)] -translate-y-1/2 text-[color:var(--color-text-subtle)]"
           />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={`Поиск: ${config.pluralName.toLowerCase()}…`}
-            className="pl-8"
+            className="pl-[calc(var(--space-sm)+1.25rem)]"
           />
         </div>
         <span className="text-[length:var(--text-sm)] tabular-nums text-[color:var(--color-text-muted)]">
@@ -122,9 +122,9 @@ export function CrudTable<TRead extends { id: string }, TForm extends Record<str
       </div>
 
       <div className="overflow-hidden rounded-[8px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
-        {/* Header */}
+        {/* Header — gap должен совпадать с body, иначе колонки разъезжаются */}
         <div
-          className="grid border-b border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)] px-[var(--space-base)] py-[var(--space-sm)] text-[length:var(--text-xs)] tracking-wider text-[color:var(--color-text-subtle)] uppercase"
+          className="grid gap-[var(--space-base)] border-b border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)] px-[var(--space-base)] py-[var(--space-sm)] text-[length:var(--text-xs)] tracking-wider text-[color:var(--color-text-subtle)] uppercase"
           style={{ gridTemplateColumns: buildGridCols(config.columns, totalCols) }}
         >
           {config.columns.map((col) => (

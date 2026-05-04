@@ -25,9 +25,16 @@ export const focusAdvicesConfig: EntityConfig<
   update: adminCatalogApi.focusAdvices.update,
   delete: adminCatalogApi.focusAdvices.delete,
   columns: [
-    { key: 'discipline_id', label: 'Дисциплина', mono: true, width: 220 },
-    { key: 'career_direction_id', label: 'Направление', mono: true, width: 220 },
-    { key: 'focus_advice', label: 'Совет' },
+    {
+      key: 'focus_advice',
+      label: 'Совет',
+      render: (row) => row.focus_advice ?? '—',
+    },
+    {
+      key: 'reasoning',
+      label: 'Обоснование',
+      render: (row) => row.reasoning ?? '—',
+    },
   ],
   fields: [
     {
@@ -65,10 +72,10 @@ export const focusAdvicesConfig: EntityConfig<
   ],
   schema,
   toFormValues: (row) => ({
-    discipline_id: row.discipline_id,
-    career_direction_id: row.career_direction_id,
-    focus_advice: row.focus_advice,
-    reasoning: row.reasoning,
+    discipline_id: row.discipline_id ?? '',
+    career_direction_id: row.career_direction_id ?? '',
+    focus_advice: row.focus_advice ?? '',
+    reasoning: row.reasoning ?? '',
   }),
   emptyFormValues: () => ({
     discipline_id: '',
@@ -76,6 +83,8 @@ export const focusAdvicesConfig: EntityConfig<
     focus_advice: '',
     reasoning: '',
   }),
-  rowLabel: (row) =>
-    `${row.focus_advice.slice(0, 60)}${row.focus_advice.length > 60 ? '…' : ''}`,
+  rowLabel: (row) => {
+    const text = row.focus_advice ?? ''
+    return `${text.slice(0, 60)}${text.length > 60 ? '…' : ''}` || `Фокус ${row.id?.slice(0, 8) ?? ''}`
+  },
 }

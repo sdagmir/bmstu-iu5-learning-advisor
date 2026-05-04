@@ -36,14 +36,14 @@ export const disciplinesConfig: EntityConfig<AdminDiscipline, AdminDisciplineCre
       key: 'type',
       label: 'Тип',
       width: 140,
-      render: (row) => DISCIPLINE_TYPE_LABELS[row.type],
+      render: (row) => DISCIPLINE_TYPE_LABELS[row.type] ?? '—',
     },
-    { key: 'credits', label: 'ЗЕТ', mono: true, width: 60 },
+    { key: 'credits', label: 'ЕЗ', mono: true, width: 60 },
     {
       key: 'competencies',
       label: 'Компетенции',
       width: 140,
-      render: (row) => `${row.competencies.length} шт`,
+      render: (row) => `${row.competencies?.length ?? 0} шт`,
     },
   ],
   fields: [
@@ -56,7 +56,7 @@ export const disciplinesConfig: EntityConfig<AdminDiscipline, AdminDisciplineCre
     },
     {
       name: 'credits',
-      label: 'ЗЕТ (зачётные единицы)',
+      label: 'Единицы занятости',
       type: 'number',
     },
     {
@@ -99,7 +99,7 @@ export const disciplinesConfig: EntityConfig<AdminDiscipline, AdminDisciplineCre
     type: row.type,
     control_form: row.control_form,
     department: row.department,
-    competency_ids: row.competencies.map((c) => c.id),
+    competency_ids: row.competencies?.map((c) => c.id) ?? [],
   }),
   emptyFormValues: () => ({
     name: '',
