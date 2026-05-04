@@ -41,6 +41,11 @@ class Settings(BaseSettings):
     debug: bool = False
     cors_origins: list[str] = ["http://localhost:3000"]
 
+    # Демо-аккаунт для защиты диплома (Phase 11 фронта)
+    demo_account_enabled: bool = False
+    demo_account_email: str = "demo@rsito.student"
+    demo_account_password: str = "demo-rsito-2026"
+
     @field_validator("jwt_secret_key")
     @classmethod
     def validate_secret(cls, v: str) -> str:

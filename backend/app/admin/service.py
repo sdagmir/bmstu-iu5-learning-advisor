@@ -185,8 +185,10 @@ class CKCourseService:
         comps = await _load_competencies(db, data.competency_ids)
         prereqs = await _load_competencies(db, data.prerequisite_ids)
         course = CKCourse(
-            name=data.name, description=data.description,
-            category=data.category, credits=data.credits,
+            name=data.name,
+            description=data.description,
+            category=data.category,
+            credits=data.credits,
         )
         course.competencies = comps
         course.prerequisites = prereqs
@@ -360,9 +362,7 @@ class RuleService:
         await db.delete(rule)
         await db.flush()
 
-    async def set_published(
-        self, rule_id: uuid.UUID, published: bool, db: AsyncSession
-    ) -> Rule:
+    async def set_published(self, rule_id: uuid.UUID, published: bool, db: AsyncSession) -> Rule:
         """Перевод правила между статусами draft и published."""
         rule = await self.get(rule_id, db)
         rule.is_published = published
@@ -378,10 +378,7 @@ class UserAdminService:
 
     async def list(self, db: AsyncSession, *, offset: int = 0, limit: int = 50) -> list[User]:
         result = await db.execute(
-            select(User)
-            .order_by(User.created_at.desc())
-            .offset(offset)
-            .limit(limit)
+            select(User).order_by(User.created_at.desc()).offset(offset).limit(limit)
         )
         return list(result.scalars().all())
 
@@ -392,9 +389,7 @@ class UserAdminService:
             raise NotFoundError("User", str(user_id))
         return user
 
-    async def update(
-        self, user_id: uuid.UUID, data: UserAdminUpdate, db: AsyncSession
-    ) -> User:
+    async def update(self, user_id: uuid.UUID, data: UserAdminUpdate, db: AsyncSession) -> User:
         user = await self.get(user_id, db)
         for field, value in data.model_dump(exclude_unset=True).items():
             setattr(user, field, value)

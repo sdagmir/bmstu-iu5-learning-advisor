@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select
@@ -40,7 +40,7 @@ class LockStatus:
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 async def _fetch_active(db: AsyncSession) -> RuleEditingLock | None:
@@ -135,12 +135,8 @@ async def assert_owned_by(db: AsyncSession, admin_id: uuid.UUID) -> None:
     """
     lock = await _fetch_active(db)
     if lock is None:
-        raise LockedError(
-            "Сначала захватите лок: POST /api/v1/admin/rules/lock"
-        )
+        raise LockedError("Сначала захватите лок: POST /api/v1/admin/rules/lock")
     if lock.admin_id != admin_id:
         owner = await db.get(User, lock.admin_id)
         owner_label = owner.email if owner else str(lock.admin_id)
-        raise LockedError(
-            f"Конструктор правил занят другим админом: {owner_label}"
-        )
+        raise LockedError(f"Конструктор правил занят другим админом: {owner_label}")

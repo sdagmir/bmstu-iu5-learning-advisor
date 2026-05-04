@@ -37,6 +37,7 @@
 | GET | `/users/me` | Текущий профиль |
 | PATCH | `/users/me` | Обновление X1-X4 |
 | GET | `/users/me/workload` | Нагрузка: е.з. по семестрам + ЦК + ТП |
+| GET | `/users/me/coverage` | Покрытие компетенций: have vs needed для радара |
 | GET | `/users/me/completed-ck` | Список пройденных ЦК |
 | POST | `/users/me/completed-ck` | Отметить ЦК пройденным |
 | DELETE | `/users/me/completed-ck/{id}` | Убрать ЦК |

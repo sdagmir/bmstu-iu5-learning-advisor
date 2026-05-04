@@ -9,7 +9,9 @@ from app.auth.schemas import (
     TokenResponse,
 )
 from app.auth.service import auth_service
+from app.config import settings
 from app.dependencies import DbSession
+from app.exceptions import NotFoundError
 
 router = APIRouter()
 
@@ -23,6 +25,21 @@ async def register(body: RegisterRequest, db: DbSession) -> TokenResponse:
 @router.post("/login", response_model=TokenResponse)
 async def login(body: LoginRequest, db: DbSession) -> TokenResponse:
     _, access_token, refresh_token = await auth_service.login(body.email, body.password, db)
+    return TokenResponse(access_token=access_token, refresh_token=refresh_token)
+
+
+@router.post("/demo-login", response_model=TokenResponse)
+async def demo_login(db: DbSession) -> TokenResponse:
+    """Один клик — токены для демо-аккаунта (для защиты диплома).
+
+    Активен только при `DEMO_ACCOUNT_ENABLED=true` в окружении. На проде
+    отдаёт 404 — фронт может показывать кнопку всегда и тихо обрабатывать ошибку.
+    """
+    if not settings.demo_account_enabled:
+        raise NotFoundError("Endpoint", "demo-login")
+    _, access_token, refresh_token = await auth_service.login(
+        settings.demo_account_email, settings.demo_account_password, db
+    )
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
 

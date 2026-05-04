@@ -15,11 +15,12 @@
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime
 
 from app.rag.bm25 import BM25Encoder
 from app.rag.embedder import EmbeddingClient
 from app.rag.qdrant_client import QdrantService
-from app.rag.schemas import DocumentChunk
+from app.rag.schemas import DocumentChunk, RAGDocumentSummary
 
 logger = logging.getLogger(__name__)
 
@@ -156,6 +157,8 @@ class RAGService:
         # Sparse BM25 векторы
         sparse_vectors = [self._bm25.encode(chunk) for chunk in chunks]
 
+        indexed_at = datetime.now(UTC).isoformat()
+
         # Сохраняем в Qdrant
         for i, (chunk, dense, sparse) in enumerate(
             zip(chunks, dense_vectors, sparse_vectors, strict=True)
@@ -169,6 +172,7 @@ class RAGService:
                     "content": chunk,
                     "source": source,
                     "chunk_index": i,
+                    "indexed_at": indexed_at,
                 },
             )
 
@@ -211,6 +215,26 @@ class RAGService:
     def document_count(self) -> int:
         """Количество чанков в базе знаний."""
         return self._qdrant.count()
+
+    def list_documents(self, *, offset: int = 0, limit: int = 50) -> list[RAGDocumentSummary]:
+        """Список уникальных source с агрегатами (chunks_count, indexed_at).
+
+        Пагинация — по списку источников (не по чанкам), отсортированных
+        алфавитно для стабильности.
+        """
+        self._ensure_collection()
+        rows = self._qdrant.aggregate_sources()
+        page = rows[offset : offset + limit]
+        return [
+            RAGDocumentSummary(
+                source=row["source"],
+                chunks_count=row["chunks_count"],
+                indexed_at=(
+                    datetime.fromisoformat(row["indexed_at"]) if row.get("indexed_at") else None
+                ),
+            )
+            for row in page
+        ]
 
     async def close(self) -> None:
         await self._embedder.close()

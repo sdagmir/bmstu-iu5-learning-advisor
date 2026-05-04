@@ -202,6 +202,7 @@ class RuleRead(BaseModel):
     priority: int
     is_active: bool
     is_published: bool
+    trigger_count: int = 0
 
     model_config = {"from_attributes": True}
 

@@ -4,9 +4,13 @@ from typing import Any
 
 from fastapi import APIRouter
 
-from app.dependencies import CurrentAdmin, CurrentUser, DbSession
-from app.expert.schemas import Recommendation, StudentProfile
-from app.expert.service import expert_service
+from app.dependencies import CurrentAdmin, CurrentUser, DbSession, PageLimit, PageOffset
+from app.expert.schemas import Recommendation, RecommendationSnapshot, StudentProfile
+from app.expert.service import (
+    expert_service,
+    increment_rule_triggers,
+    list_recommendation_history,
+)
 from app.users.profile_builder import build_student_profile
 
 router = APIRouter()
@@ -14,9 +18,26 @@ router = APIRouter()
 
 @router.get("/my-recommendations", response_model=list[Recommendation])
 async def my_recommendations(user: CurrentUser, db: DbSession) -> list[Recommendation]:
-    """Рекомендации для текущего пользователя (профиль вычисляется автоматически)."""
+    """Рекомендации для текущего пользователя (профиль вычисляется автоматически).
+
+    Это production-путь — счётчик trigger_count у сработавших правил
+    инкрементируется. /evaluate и preview-вызовы счётчик не трогают.
+    """
     profile = await build_student_profile(user, db)
-    return expert_service.get_recommendations(profile)
+    trace, recommendations = expert_service.get_recommendations_debug(profile)
+    await increment_rule_triggers(trace.fired_rule_numbers, db)
+    return recommendations
+
+
+@router.get("/recommendations/history", response_model=list[RecommendationSnapshot])
+async def recommendations_history(
+    user: CurrentUser,
+    db: DbSession,
+    offset: PageOffset = 0,
+    limit: PageLimit = 50,
+) -> list[RecommendationSnapshot]:
+    """Лента прошлых снапшотов рекомендаций (создаются при изменении X1–X4)."""
+    return await list_recommendation_history(user.id, db, offset=offset, limit=limit)
 
 
 @router.post("/evaluate", response_model=list[Recommendation])

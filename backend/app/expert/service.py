@@ -2,13 +2,26 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
+from sqlalchemy import select, update
+
+from app.db.models import RecommendationHistory, Rule
 from app.expert.engine import EvaluationTrace, PythonRuleEngine, RuleData
 from app.expert.rules_data import get_all_rules
+from app.expert.schemas import RecommendationSnapshot
+from app.users.profile_builder import build_student_profile
 
 if TYPE_CHECKING:
+    import uuid
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.db.models import User
     from app.expert.schemas import Recommendation, StudentProfile
+
+logger = logging.getLogger(__name__)
 
 
 def _build_engine_from_seed() -> PythonRuleEngine:
@@ -58,3 +71,78 @@ class ExpertService:
 
 
 expert_service = ExpertService()
+
+
+async def capture_recommendation_snapshot(
+    user: User, db: AsyncSession, change_summary: str | None
+) -> None:
+    """Зафиксировать рекомендации текущего профиля в историю.
+
+    Вызывается из user_service после изменения X1–X4. Если новый список
+    рекомендаций (rule_id-ы) совпадает с последним snapshot'ом — пропускаем,
+    чтобы не плодить дубликаты при no-op обновлениях профиля.
+    """
+    profile = await build_student_profile(user, db)
+    recs = expert_service.get_recommendations(profile)
+    new_rule_ids = [r.rule_id for r in recs]
+
+    last = await db.execute(
+        select(RecommendationHistory)
+        .where(RecommendationHistory.user_id == user.id)
+        .order_by(RecommendationHistory.created_at.desc())
+        .limit(1)
+    )
+    prev = last.scalar_one_or_none()
+    if prev is not None:
+        prev_rule_ids = [r.get("rule_id") for r in prev.recommendations]
+        if prev_rule_ids == new_rule_ids:
+            return
+
+    entry = RecommendationHistory(
+        user_id=user.id,
+        recommendations=[r.model_dump(mode="json") for r in recs],
+        profile_change_summary=change_summary,
+    )
+    db.add(entry)
+    await db.flush()
+
+
+async def increment_rule_triggers(fired_numbers: list[int], db: AsyncSession) -> None:
+    """Увеличить trigger_count у сработавших правил.
+
+    Вызывается ТОЛЬКО из production-путей (/expert/my-recommendations), где
+    рекомендации фактически показываются студенту. Не должна вызываться из
+    preview/sandbox/what-if (/expert/evaluate, RulesPage preview).
+
+    Обёрнуто в SAVEPOINT: если UPDATE упадёт (lock timeout, broken connection),
+    откатится только nested-транзакция — основной запрос /my-recommendations
+    спокойно вернёт рекомендации студенту.
+    """
+    if not fired_numbers:
+        return
+    try:
+        async with db.begin_nested():
+            await db.execute(
+                update(Rule)
+                .where(Rule.number.in_(fired_numbers))
+                .values(trigger_count=Rule.trigger_count + 1)
+                .execution_options(synchronize_session=False)
+            )
+    except BaseException:
+        # Метрика — best effort: ошибка не должна валить ответ студенту
+        logger.exception("Не удалось обновить trigger_count")
+
+
+async def list_recommendation_history(
+    user_id: uuid.UUID, db: AsyncSession, *, offset: int = 0, limit: int = 50
+) -> list[RecommendationSnapshot]:
+    """Лента снапшотов рекомендаций пользователя (newest first)."""
+    result = await db.execute(
+        select(RecommendationHistory)
+        .where(RecommendationHistory.user_id == user_id)
+        .order_by(RecommendationHistory.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+    )
+    rows = list(result.scalars().all())
+    return [RecommendationSnapshot.model_validate(row) for row in rows]

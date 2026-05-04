@@ -44,7 +44,7 @@ Seed = начальное наполнение. Дальше все через A
 Все списки: `offset` (default 0) + `limit` (default 50, max 100).
 Нет total_count -- конец списка: `len(result) < limit`.
 
-## API (31 эндпоинт)
+## API
 
 | Группа | Методы | Путь |
 |--------|--------|------|
@@ -55,6 +55,7 @@ Seed = начальное наполнение. Дальше все через A
 | Career Directions | GET, POST, PATCH/{id}, DELETE/{id} | `/admin/career-directions` |
 | Focus Advices | GET, POST, PATCH/{id}, DELETE/{id} | `/admin/focus-advices` |
 | Rules | GET, POST, PATCH/{id}, DELETE/{id} | `/admin/rules` |
+| LLM traces | GET, GET/{id} | `/admin/traces` (роутер `app/llm/admin_router.py`) |
 
 ## Файлы
 

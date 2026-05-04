@@ -34,8 +34,8 @@ class SemesterWorkload(BaseModel):
 
     semester: int
     mandatory_credits: int  # обязательные дисциплины
-    elective_credits: int   # элективные дисциплины
-    total_curriculum: int   # итого по учебному плану
+    elective_credits: int  # элективные дисциплины
+    total_curriculum: int  # итого по учебному плану
 
 
 class WorkloadSummary(BaseModel):
@@ -43,18 +43,16 @@ class WorkloadSummary(BaseModel):
 
     current_semester: int
     semesters: list[SemesterWorkload]
-    completed_ck_credits: int     # е.з. пройденных ЦК суммарно
-    technopark_credits: int       # е.з. Технопарка (0 или TECHNOPARK_CREDITS)
-    total_extra_credits: int      # ЦК + ТП
+    completed_ck_credits: int  # е.з. пройденных ЦК суммарно
+    technopark_credits: int  # е.з. Технопарка (0 или TECHNOPARK_CREDITS)
+    total_extra_credits: int  # ЦК + ТП
 
 
 async def compute_workload(user: User, db: AsyncSession) -> WorkloadSummary:
     """Рассчитать нагрузку студента по семестрам."""
     semester = user.semester or 1
     technopark_status = (
-        TechparkStatus(user.technopark_status)
-        if user.technopark_status
-        else TechparkStatus.NONE
+        TechparkStatus(user.technopark_status) if user.technopark_status else TechparkStatus.NONE
     )
 
     # Нагрузка по семестрам из учебного плана

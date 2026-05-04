@@ -4,17 +4,29 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.dependencies import CurrentAdmin, CurrentUser, DbSession
+from app.dependencies import CurrentAdmin, CurrentUser, DbSession, PageLimit, PageOffset
 from app.rag.schemas import (
     DocumentChunk,
     DocumentUpload,
     DocumentUploadResult,
+    RAGDocumentSummary,
     RAGStats,
     SearchRequest,
 )
 from app.rag.service import rag_service
 
 router = APIRouter()
+
+
+@router.get("/documents", response_model=list[RAGDocumentSummary])
+async def list_documents(
+    admin: CurrentAdmin,
+    db: DbSession,
+    offset: PageOffset = 0,
+    limit: PageLimit = 50,
+) -> list[RAGDocumentSummary]:
+    """Список индексированных источников с количеством чанков (админ)."""
+    return rag_service.list_documents(offset=offset, limit=limit)
 
 
 @router.post("/documents", response_model=DocumentUploadResult, status_code=201)

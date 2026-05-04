@@ -88,6 +88,7 @@ def _register_routers(app: FastAPI) -> None:
     from app.auth.router import router as auth_router
     from app.catalog.router import router as catalog_router
     from app.expert.router import router as expert_router
+    from app.llm.admin_router import router as llm_admin_router
     from app.llm.router import router as chat_router
     from app.rag.router import router as rag_router
     from app.users.router import router as users_router
@@ -100,6 +101,7 @@ def _register_routers(app: FastAPI) -> None:
     app.include_router(chat_router, prefix=f"{prefix}/chat", tags=["chat"])
     app.include_router(rag_router, prefix=f"{prefix}/rag", tags=["rag"])
     app.include_router(admin_router, prefix=f"{prefix}/admin", tags=["admin"])
+    app.include_router(llm_admin_router, prefix=f"{prefix}/admin", tags=["admin"])
 
 
 def _register_exception_handlers(app: FastAPI) -> None:

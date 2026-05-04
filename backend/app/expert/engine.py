@@ -134,9 +134,7 @@ class PythonRuleEngine:
         logger.info("Движок ЭС инициализирован: %d правил", len(self._rules))
 
     @classmethod
-    async def from_db(
-        cls, db: object, *, include_drafts: bool = False
-    ) -> PythonRuleEngine:
+    async def from_db(cls, db: object, *, include_drafts: bool = False) -> PythonRuleEngine:
         """Загрузка правил из БД.
 
         - include_drafts=False (default) — только опубликованные active-правила.

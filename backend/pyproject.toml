@@ -35,8 +35,10 @@ ignore = ["RUF001", "RUF002", "RUF003"]
 
 [tool.ruff.lint.per-file-ignores]
 "app/*/router.py" = ["TCH"]
+"app/*/admin_router.py" = ["TCH"]
 "app/*/schemas.py" = ["TCH"]
 "app/db/models.py" = ["TCH"]
+"app/db/migrations/versions/*.py" = ["TCH"]
 "app/expert/rules_data.py" = ["E501"]
 "tests/**" = ["ANN"]
 

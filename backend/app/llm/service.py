@@ -14,6 +14,11 @@ import logging
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from sqlalchemy import select
+
+from app.config import settings
+from app.db.database import async_session_factory
+from app.db.models import LLMTrace, User
 from app.llm.client import OpenRouterClient
 from app.llm.prompts import (
     SYSTEM_PROMPT,
@@ -21,8 +26,14 @@ from app.llm.prompts import (
     build_profile_context,
     format_recommendations_for_llm,
 )
+from app.llm.schemas import DebugInfo, TraceDetail, TraceSummary
 
 if TYPE_CHECKING:
+    import uuid
+    from datetime import datetime
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
     from app.expert.schemas import StudentProfile
 
 logger = logging.getLogger(__name__)
@@ -240,3 +251,126 @@ class ChatService:
 
 
 chat_service = ChatService()
+
+
+# ── Журнал LLM-трейсов (admin) ────────────────────────────────────────────
+
+
+async def write_trace(
+    *,
+    user_id: uuid.UUID,
+    endpoint: str,
+    request_message: str,
+    response_text: str,
+    debug: ChatDebugInfo | None,
+    latency_ms: int,
+    status: str,
+) -> None:
+    """Записать одну запись в `llm_traces`.
+
+    Запускается через BackgroundTasks после возврата ответа клиенту, чтобы
+    не блокировать handler. Открывает собственную короткую сессию.
+    """
+    debug_payload: dict[str, Any] | None = None
+    if debug is not None:
+        debug_payload = {
+            "rules_fired": debug.rules_fired,
+            "rag_chunks": debug.rag_chunks,
+            "tool_calls": debug.tool_calls,
+            "profile_changes": debug.profile_changes,
+        }
+
+    try:
+        async with async_session_factory() as db:
+            trace = LLMTrace(
+                user_id=user_id,
+                endpoint=endpoint,
+                request_message=request_message,
+                response_text=response_text,
+                debug=debug_payload,
+                latency_ms=latency_ms,
+                status=status,
+                model_name=settings.llm_model,
+            )
+            db.add(trace)
+            await db.commit()
+    except BaseException:
+        # Журнал — best effort: ошибка записи не должна валить запрос
+        logger.exception("Не удалось записать LLM-трейс")
+
+
+async def list_traces(
+    db: AsyncSession,
+    *,
+    user_id: uuid.UUID | None = None,
+    date_from: datetime | None = None,
+    date_to: datetime | None = None,
+    offset: int = 0,
+    limit: int = 50,
+) -> list[TraceSummary]:
+    """Список трейсов с фильтрами user_id / date_from / date_to и пагинацией."""
+    stmt = (
+        select(LLMTrace, User.email)
+        .join(User, User.id == LLMTrace.user_id)
+        .order_by(LLMTrace.created_at.desc())
+    )
+    if user_id is not None:
+        stmt = stmt.where(LLMTrace.user_id == user_id)
+    if date_from is not None:
+        stmt = stmt.where(LLMTrace.created_at >= date_from)
+    if date_to is not None:
+        stmt = stmt.where(LLMTrace.created_at <= date_to)
+
+    stmt = stmt.offset(offset).limit(limit)
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    summaries: list[TraceSummary] = []
+    for trace, email in rows:
+        rules_fired = (trace.debug or {}).get("rules_fired") or []
+        summaries.append(
+            TraceSummary(
+                id=trace.id,
+                created_at=trace.created_at,
+                user_email=email,
+                endpoint=trace.endpoint,
+                latency_ms=trace.latency_ms,
+                status=trace.status,
+                rules_fired_count=len(rules_fired),
+                request_preview=trace.request_message[:80],
+            )
+        )
+    return summaries
+
+
+async def get_trace(trace_id: uuid.UUID, db: AsyncSession) -> TraceDetail | None:
+    """Полная запись трейса с email пользователя."""
+    result = await db.execute(select(LLMTrace).where(LLMTrace.id == trace_id))
+    trace = result.scalar_one_or_none()
+    if trace is None:
+        return None
+
+    user_email = await db.scalar(select(User.email).where(User.id == trace.user_id))
+
+    debug = None
+    if trace.debug:
+        debug = DebugInfo(
+            rules_fired=trace.debug.get("rules_fired") or [],
+            rag_chunks=trace.debug.get("rag_chunks") or [],
+            tool_calls=trace.debug.get("tool_calls") or [],
+            profile_changes=trace.debug.get("profile_changes") or {},
+        )
+
+    return TraceDetail(
+        id=trace.id,
+        created_at=trace.created_at,
+        user_id=trace.user_id,
+        user_email=user_email or "",
+        endpoint=trace.endpoint,
+        request_message=trace.request_message,
+        response_text=trace.response_text,
+        debug=debug,
+        latency_ms=trace.latency_ms,
+        status=trace.status,
+        model_name=trace.model_name,
+    )

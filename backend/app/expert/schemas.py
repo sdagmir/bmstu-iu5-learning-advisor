@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import enum
 import uuid
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
@@ -67,3 +68,14 @@ class Recommendation(BaseModel):
     priority: RecommendationPriority
     reasoning: str
     competency_gap: str | None = None
+
+
+class RecommendationSnapshot(BaseModel):
+    """Снимок рекомендаций в момент изменения профиля (для ленты /history)."""
+
+    id: uuid.UUID
+    created_at: datetime
+    recommendations: list[Recommendation]
+    profile_change_summary: str | None = None
+
+    model_config = {"from_attributes": True}

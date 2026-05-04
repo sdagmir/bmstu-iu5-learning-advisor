@@ -16,15 +16,22 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: TC002
 
+from app.config import settings
 from app.db.database import async_session_factory
 from app.db.models import (
     CareerDirection,
+    CareerGoal,
     CKCourse,
     CKCourseCategory,
     Competency,
     CompetencyCategory,
     Discipline,
     DisciplineType,
+    StudentCompletedCK,
+    StudentGrade,
+    TechparkStatus,
+    User,
+    WorkloadPref,
 )
 
 logger = logging.getLogger(__name__)
@@ -144,9 +151,7 @@ async def seed_ck_courses(db: AsyncSession, tag_map: dict[str, Competency]) -> N
             category=CKCourseCategory(item["category"]),
             credits=item.get("credits", 2),
         )
-        course.competencies = [
-            tag_map[t] for t in item.get("competency_tags", []) if t in tag_map
-        ]
+        course.competencies = [tag_map[t] for t in item.get("competency_tags", []) if t in tag_map]
         course.prerequisites = [
             tag_map[t] for t in item.get("prerequisite_tags", []) if t in tag_map
         ]
@@ -184,6 +189,52 @@ async def seed_rules(db: AsyncSession) -> None:
     await db.flush()
 
 
+# ── Демо-аккаунт ───────────────────────────────────────────────────────────
+
+
+async def seed_demo_account(db: AsyncSession) -> None:
+    """Создать демо-аккаунт для кнопки «Демо для комиссии».
+
+    Профиль: 5-й семестр, цель ML, без ТП, обычная нагрузка, 3 пройденных ЦК
+    (ML + Development), все оценки = 4 (без слабых баз). Создаётся только если
+    `settings.demo_account_enabled` (на проде выключено).
+    """
+    if not settings.demo_account_enabled:
+        return
+
+    from app.auth.service import auth_service
+
+    email = settings.demo_account_email
+    result = await db.execute(select(User).where(User.email == email))
+    if result.scalar_one_or_none() is not None:
+        logger.info("Демо-аккаунт %s уже существует", email)
+        return
+
+    user, _, _ = await auth_service.register(email, settings.demo_account_password, db)
+    user.semester = 5
+    user.career_goal = CareerGoal.ML
+    user.technopark_status = TechparkStatus.NONE
+    user.workload_pref = WorkloadPref.NORMAL
+
+    # 3 пройденных ЦК: 2 из ML + 1 из Development (для X5=true, X6=partial)
+    ml_courses = await db.execute(
+        select(CKCourse).where(CKCourse.category == CKCourseCategory.ML).limit(2)
+    )
+    dev_courses = await db.execute(
+        select(CKCourse).where(CKCourse.category == CKCourseCategory.DEVELOPMENT).limit(1)
+    )
+    for course in [*ml_courses.scalars().all(), *dev_courses.scalars().all()]:
+        db.add(StudentCompletedCK(user_id=user.id, ck_course_id=course.id))
+
+    # Оценки = 4 по всем дисциплинам 1-4 семестра (среднее = 4.0, не слабые базы)
+    disciplines = await db.execute(select(Discipline).where(Discipline.semester <= 4))
+    for disc in disciplines.scalars().all():
+        db.add(StudentGrade(user_id=user.id, discipline_id=disc.id, grade=4))
+
+    await db.flush()
+    logger.info("  + демо-аккаунт: %s (пароль: %s)", email, settings.demo_account_password)
+
+
 # ── Запуск ─────────────────────────────────────────────────────────────────
 
 
@@ -199,6 +250,7 @@ async def run_seed() -> None:
             await seed_disciplines(db, tag_map)
             await seed_ck_courses(db, tag_map)
             await seed_rules(db)
+            await seed_demo_account(db)
             await db.commit()
             logger.info("=== Сидирование завершено ===")
         except Exception:

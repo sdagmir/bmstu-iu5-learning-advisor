@@ -5,6 +5,7 @@ import uuid
 from fastapi import APIRouter
 
 from app.dependencies import CurrentUser, DbSession
+from app.users.coverage import CoverageResponse, compute_coverage
 from app.users.schemas import (
     CompletedCKAdd,
     CompletedCKRead,
@@ -34,6 +35,12 @@ async def update_profile(body: ProfileUpdate, user: CurrentUser, db: DbSession) 
 async def get_workload(user: CurrentUser, db: DbSession) -> WorkloadSummary:
     """Расчёт учебной нагрузки: е.з. по семестрам + ЦК + Технопарк."""
     return await compute_workload(user, db)
+
+
+@router.get("/me/coverage", response_model=CoverageResponse)
+async def get_coverage(user: CurrentUser, db: DbSession) -> CoverageResponse:
+    """Покрытие компетенций: какие имею vs нужные для карьерной цели."""
+    return await compute_coverage(user, db)
 
 
 # ── Пройденные ЦК ──────────────────────────────────────────────────────────
@@ -69,9 +76,7 @@ async def add_completed_ck(
 
 
 @router.delete("/me/completed-ck/{ck_course_id}", status_code=204)
-async def remove_completed_ck(
-    ck_course_id: uuid.UUID, user: CurrentUser, db: DbSession
-) -> None:
+async def remove_completed_ck(ck_course_id: uuid.UUID, user: CurrentUser, db: DbSession) -> None:
     """Убрать ЦК из пройденных."""
     await user_service.remove_completed_ck(user.id, ck_course_id, db)
 
@@ -94,9 +99,7 @@ async def list_grades(user: CurrentUser, db: DbSession) -> list[GradeRead]:
 
 
 @router.put("/me/grades", response_model=list[GradeRead])
-async def set_grades(
-    body: GradesBulk, user: CurrentUser, db: DbSession
-) -> list[GradeRead]:
+async def set_grades(body: GradesBulk, user: CurrentUser, db: DbSession) -> list[GradeRead]:
     """Полная замена оценок по дисциплинам."""
     items = await user_service.set_grades(user.id, body.grades, db)
     return [

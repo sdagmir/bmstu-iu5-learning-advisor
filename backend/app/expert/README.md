@@ -57,6 +57,7 @@ StudentProfile (X1-X12)        ← ProfileBuilder (автоматически и
 | Метод | Путь | Описание |
 |-------|------|----------|
 | GET | `/expert/my-recommendations` | Рекомендации с автопрофилем (основной для фронта) |
+| GET | `/expert/recommendations/history` | Лента прошлых снапшотов (фиксируются при изменении X1–X4) |
 | POST | `/expert/evaluate` | Рекомендации по произвольному профилю (what-if) |
 | POST | `/expert/evaluate/debug` | Трассировка ЭС (admin) |
 

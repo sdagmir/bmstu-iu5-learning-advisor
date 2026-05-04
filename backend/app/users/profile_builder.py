@@ -64,9 +64,7 @@ async def build_student_profile(user: User, db: AsyncSession) -> StudentProfile:
     technopark_status = (
         TechparkStatus(user.technopark_status) if user.technopark_status else TechparkStatus.NONE
     )
-    workload_pref = (
-        WorkloadPref(user.workload_pref) if user.workload_pref else WorkloadPref.NORMAL
-    )
+    workload_pref = WorkloadPref(user.workload_pref) if user.workload_pref else WorkloadPref.NORMAL
 
     # Загрузка пройденных ЦК с категориями
     completed_courses = await _load_completed_ck(user_id, db)
@@ -94,9 +92,7 @@ async def build_student_profile(user: User, db: AsyncSession) -> StudentProfile:
     weak_math, weak_programming = await _compute_weak_flags(user_id, db)
 
     # X11: покрытие целевого профиля компетенций
-    coverage = await _compute_coverage(
-        user_id, career_goal, semester, completed_courses, db
-    )
+    coverage = await _compute_coverage(user_id, career_goal, semester, completed_courses, db)
 
     # X12: максимум ЦК в одной категории >= 3 → many
     max_in_category = max(category_counts.values()) if category_counts else 0
@@ -129,9 +125,7 @@ async def _load_completed_ck(user_id: uuid.UUID, db: AsyncSession) -> list[CKCou
     return list(result.scalars().all())
 
 
-async def _compute_weak_flags(
-    user_id: uuid.UUID, db: AsyncSession
-) -> tuple[bool, bool]:
+async def _compute_weak_flags(user_id: uuid.UUID, db: AsyncSession) -> tuple[bool, bool]:
     """Вычислить X9 (weak_math) и X10 (weak_programming) по средней оценке.
 
     Средняя оценка по дисциплинам с мат./прогр. компетенциями < WEAK_THRESHOLD → True.
@@ -198,8 +192,9 @@ async def _compute_coverage(
 
     # Дисциплины с оценкой ≤ 2 — не считаем освоенными
     result = await db.execute(
-        select(StudentGrade.discipline_id)
-        .where(StudentGrade.user_id == user_id, StudentGrade.grade <= 2)
+        select(StudentGrade.discipline_id).where(
+            StudentGrade.user_id == user_id, StudentGrade.grade <= 2
+        )
     )
     failed_discipline_ids = {row[0] for row in result.all()}
 

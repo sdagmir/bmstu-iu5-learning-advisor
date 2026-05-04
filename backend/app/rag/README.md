@@ -40,6 +40,7 @@
 
 | Метод | Путь | Роль | Описание |
 |-------|------|------|----------|
+| GET | `/rag/documents` | admin | Список источников с агрегатами (chunks_count, indexed_at) |
 | POST | `/rag/documents` | admin | Загрузка документа → чанки + эмбеддинги |
 | DELETE | `/rag/documents/{source:path}` | admin | Удаление документа и его чанков |
 | POST | `/rag/search` | user | Гибридный поиск (top_k=5) |

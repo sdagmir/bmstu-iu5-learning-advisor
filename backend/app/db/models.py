@@ -3,6 +3,7 @@ from __future__ import annotations
 import enum
 import uuid
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import (
     Boolean,
@@ -295,6 +296,9 @@ class Rule(Base):
     # Опубликованное правило применяется к рекомендациям всех студентов.
     # Новое правило по умолчанию — черновик; админ публикует через эндпоинт.
     is_published: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Сколько раз правило сработало в production-движке (только /my-recommendations).
+    # Не растёт для preview/sandbox/what-if вызовов.
+    trigger_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
 
 class RuleEditingLock(Base):
@@ -372,3 +376,51 @@ class StudentGrade(Base):
 
     user: Mapped[User] = relationship(back_populates="grades")
     discipline: Mapped[Discipline] = relationship()
+
+
+class RecommendationHistory(Base):
+    """Снимок рекомендаций ЭС в момент значимого изменения профиля.
+
+    Создаётся при изменении X1–X4 (PATCH /users/me) — фиксирует список
+    рекомендаций и краткое описание того, что поменялось ("Цель: backend → ml").
+    Используется страницей /history для ленты прошлых рекомендаций.
+    """
+
+    __tablename__ = "recommendation_history"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+    # JSON-список Recommendation как dict — для устойчивости к изменению схем
+    recommendations: Mapped[list[dict[str, Any]]] = mapped_column(JSON)
+    profile_change_summary: Mapped[str | None] = mapped_column(Text)
+
+
+class LLMTrace(Base):
+    """Журнал запросов к LLM-чату (для админ-страницы /admin/traces).
+
+    Каждый вызов /chat/message и /chat/message/debug пишет запись с request,
+    response, отладкой (rules_fired, rag_chunks, tool_calls, profile_changes),
+    латентностью и статусом (ok / error / timeout).
+    """
+
+    __tablename__ = "llm_traces"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+    endpoint: Mapped[str] = mapped_column(String(32), index=True)
+    request_message: Mapped[str] = mapped_column(Text)
+    response_text: Mapped[str] = mapped_column(Text, default="")
+    debug: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    latency_ms: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(String(16), default="ok", index=True)
+    model_name: Mapped[str | None] = mapped_column(String(128))

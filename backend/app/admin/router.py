@@ -44,6 +44,7 @@ from app.admin.service import (
 from app.dependencies import CurrentAdmin, DbSession, PageLimit, PageOffset
 from app.expert.schemas import StudentProfile
 from app.expert.service import expert_service
+from app.users.profile_builder import build_student_profile
 
 router = APIRouter()
 
@@ -71,6 +72,15 @@ async def update_user(
 ) -> UserAdminRead:
     user = await user_admin_service.update(user_id, body, db)
     return UserAdminRead.model_validate(user)
+
+
+@router.get("/users/{user_id}/profile-snapshot", response_model=StudentProfile)
+async def user_profile_snapshot(
+    user_id: uuid.UUID, admin: CurrentAdmin, db: DbSession
+) -> StudentProfile:
+    """Полный X1–X12 профиль студента для загрузки в sandbox конструктора правил."""
+    user = await user_admin_service.get(user_id, db)
+    return await build_student_profile(user, db)
 
 
 # ── Компетенции ──────────────────────────────────────────────────────────────
@@ -246,9 +256,7 @@ async def get_rules_lock(admin: CurrentAdmin, db: DbSession) -> RuleEditingLockS
 
 
 @router.post("/rules/lock", response_model=RuleEditingLockStatus)
-async def acquire_rules_lock(
-    admin: CurrentAdmin, db: DbSession
-) -> RuleEditingLockStatus:
+async def acquire_rules_lock(admin: CurrentAdmin, db: DbSession) -> RuleEditingLockStatus:
     """Захватить лок (или продлить TTL, если уже принадлежит этому админу)."""
     await rule_lock_service.acquire(db, admin.id)
     status = await rule_lock_service.get_status(db, admin.id)
@@ -316,9 +324,7 @@ async def delete_rule(rule_id: uuid.UUID, admin: CurrentAdmin, db: DbSession) ->
 
 
 @router.post("/rules/{rule_id}/publish", response_model=RuleRead)
-async def publish_rule(
-    rule_id: uuid.UUID, admin: CurrentAdmin, db: DbSession
-) -> RuleRead:
+async def publish_rule(rule_id: uuid.UUID, admin: CurrentAdmin, db: DbSession) -> RuleRead:
     """Публикация правила. Требует лок. После публикации движок ЭС перезагружается."""
     await rule_lock_service.assert_owned_by(db, admin.id)
     item = await rule_service.set_published(rule_id, True, db)
@@ -328,9 +334,7 @@ async def publish_rule(
 
 
 @router.post("/rules/{rule_id}/unpublish", response_model=RuleRead)
-async def unpublish_rule(
-    rule_id: uuid.UUID, admin: CurrentAdmin, db: DbSession
-) -> RuleRead:
+async def unpublish_rule(rule_id: uuid.UUID, admin: CurrentAdmin, db: DbSession) -> RuleRead:
     """Снятие правила с публикации. Требует лок. После снятия движок ЭС перезагружается."""
     await rule_lock_service.assert_owned_by(db, admin.id)
     item = await rule_service.set_published(rule_id, False, db)

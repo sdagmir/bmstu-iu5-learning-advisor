@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import selectinload
@@ -21,6 +21,23 @@ if TYPE_CHECKING:
 
     from app.users.schemas import GradeEntry, ProfileUpdate
 
+# Человекочитаемые подписи X1–X4 для summary в истории рекомендаций
+_PROFILE_FIELD_LABELS: dict[str, str] = {
+    "career_goal": "Цель",
+    "semester": "Семестр",
+    "technopark_status": "Технопарк",
+    "workload_pref": "Нагрузка",
+}
+
+
+def _fmt(value: Any) -> str:
+    """Форматирование значения профиля для summary (enum → его str-значение)."""
+    if value is None:
+        return "—"
+    if hasattr(value, "value"):
+        return str(value.value)
+    return str(value)
+
 
 class UserService:
     """Сервис управления профилем и учебными данными студента."""
@@ -33,11 +50,28 @@ class UserService:
         return user
 
     async def update_profile(self, user: User, data: ProfileUpdate, db: AsyncSession) -> User:
-        """Обновление полей профиля (X1-X4)."""
+        """Обновление полей профиля (X1-X4).
+
+        При фактическом изменении X1–X4 фиксирует snapshot рекомендаций в
+        `recommendation_history` (для ленты /history).
+        """
         update_data = data.model_dump(exclude_unset=True)
+
+        changes: list[str] = []
         for field, value in update_data.items():
+            old = getattr(user, field)
+            if old != value:
+                label = _PROFILE_FIELD_LABELS.get(field, field)
+                changes.append(f"{label}: {_fmt(old)} → {_fmt(value)}")
             setattr(user, field, value)
         await db.flush()
+
+        if changes:
+            # Локальный импорт — избегаем кругового импорта expert ↔ users
+            from app.expert.service import capture_recommendation_snapshot
+
+            await capture_recommendation_snapshot(user, db, "; ".join(changes))
+
         return user
 
     # ── Пройденные ЦК ──────────────────────────────────────────────────────
@@ -103,9 +137,7 @@ class UserService:
 
     # ── Оценки по дисциплинам ──────────────────────────────────────────────
 
-    async def list_grades(
-        self, user_id: uuid.UUID, db: AsyncSession
-    ) -> list[StudentGrade]:
+    async def list_grades(self, user_id: uuid.UUID, db: AsyncSession) -> list[StudentGrade]:
         """Список оценок студента по дисциплинам."""
         result = await db.execute(
             select(StudentGrade)
@@ -129,9 +161,7 @@ class UserService:
             if missing:
                 raise NotFoundError("Discipline", ", ".join(missing))
 
-        await db.execute(
-            delete(StudentGrade).where(StudentGrade.user_id == user_id)
-        )
+        await db.execute(delete(StudentGrade).where(StudentGrade.user_id == user_id))
 
         for g in grades:
             db.add(

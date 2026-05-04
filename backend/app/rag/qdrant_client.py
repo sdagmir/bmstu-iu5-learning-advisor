@@ -202,6 +202,44 @@ class QdrantService:
 
         return source_chunks
 
+    def aggregate_sources(self, batch_size: int = 256) -> list[dict[str, Any]]:
+        """Агрегаты по уникальным source: chunks_count и indexed_at (если есть).
+
+        Возвращает список словарей вида
+        ``{"source": str, "chunks_count": int, "indexed_at": str | None}``,
+        отсортированный по `source` для стабильной пагинации.
+        """
+        client = self._get_client()
+        agg: dict[str, dict[str, Any]] = {}
+        offset = None
+
+        while True:
+            results, offset = client.scroll(
+                collection_name=self._collection,
+                limit=batch_size,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            if not results:
+                break
+            for point in results:
+                source = point.payload.get("source", "unknown")
+                indexed_at = point.payload.get("indexed_at")
+                entry = agg.setdefault(
+                    source, {"source": source, "chunks_count": 0, "indexed_at": None}
+                )
+                entry["chunks_count"] += 1
+                # Берём максимальный (последний) indexed_at, если он есть
+                if indexed_at and (
+                    entry["indexed_at"] is None or indexed_at > entry["indexed_at"]
+                ):
+                    entry["indexed_at"] = indexed_at
+            if offset is None:
+                break
+
+        return sorted(agg.values(), key=lambda x: x["source"])
+
     def close(self) -> None:
         if self._client is not None:
             self._client.close()

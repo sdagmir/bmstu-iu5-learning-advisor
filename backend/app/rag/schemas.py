@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -36,3 +38,11 @@ class RAGStats(BaseModel):
     """Статистика RAG-базы."""
 
     total_chunks: int
+
+
+class RAGDocumentSummary(BaseModel):
+    """Агрегат по одному источнику в RAG-базе."""
+
+    source: str
+    chunks_count: int
+    indexed_at: datetime | None = None
