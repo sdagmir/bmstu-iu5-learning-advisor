@@ -307,7 +307,7 @@ export function RuleForm({
             <Input
               type="number"
               disabled={!canEdit}
-              className="w-[100px]"
+              className="w-24"
               {...form.register('priority', { valueAsNumber: true })}
             />
             <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">

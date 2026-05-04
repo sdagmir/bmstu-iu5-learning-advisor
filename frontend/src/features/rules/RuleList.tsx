@@ -102,13 +102,13 @@ export function RuleList({
         <div className="relative">
           <MagnifyingGlass
             size={14}
-            className="pointer-events-none absolute top-1/2 left-[10px] -translate-y-1/2 text-[color:var(--color-text-subtle)]"
+            className="pointer-events-none absolute top-1/2 left-[var(--space-sm)] -translate-y-1/2 text-[color:var(--color-text-subtle)]"
           />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Поиск: R-17, ML, Технопарк…"
-            className="h-8 pl-8 text-[length:var(--text-sm)]"
+            className="h-8 pl-[calc(var(--space-sm)+1.25rem)] text-[length:var(--text-sm)]"
           />
         </div>
 
