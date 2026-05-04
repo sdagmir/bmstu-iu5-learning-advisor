@@ -26,9 +26,11 @@ from app.rag.schemas import DocumentChunk, RAGDocumentSummary
 
 logger = logging.getLogger(__name__)
 
-# Параметры чанкинга
-CHUNK_SIZE = 500
-CHUNK_OVERLAP = 50
+# Параметры чанкинга. 1000 символов даёт лучше семантический контекст для
+# text-embedding-3-small (короткие ~500-чанки терялись по смыслу). Overlap
+# 10% — достаточно чтобы не разрезать важные мысли пополам.
+CHUNK_SIZE = 1000
+CHUNK_OVERLAP = 100
 
 # Батч для эмбеддингов (лимит API)
 EMBEDDING_BATCH_SIZE = 64
@@ -36,6 +38,12 @@ EMBEDDING_BATCH_SIZE = 64
 # TTL кэша списка документов (sec) — балансирует частоту scroll-обхода Qdrant
 # и свежесть после upload/delete (мутации сами инвалидируют кэш)
 DOCUMENTS_CACHE_TTL = 60.0
+
+# Фильтр на возврат поиска: сбрасываем чанки со score ниже половины топа.
+# RRF score не сравним с косинусом (он маленький, ~0.03 для top-1), поэтому
+# абсолютный порог не работает — используем относительный к лучшему чанку.
+# Защищает LLM от шума, когда в корпусе нет ничего релевантного запросу.
+SEARCH_RELATIVE_THRESHOLD = 0.5
 
 
 def split_into_chunks(
@@ -190,7 +198,13 @@ class RAGService:
         return len(chunks)
 
     async def search(self, query: str, *, top_k: int = 5) -> list[DocumentChunk]:
-        """Гибридный поиск: dense + BM25 sparse → RRF."""
+        """Гибридный поиск: dense + BM25 sparse → RRF.
+
+        Relative score filter: оставляем только чанки со score ≥ 50% от
+        лучшего. Когда в корпусе нет релевантного контента, RRF всё равно
+        вернёт top_k — но с большим разрывом между первым и остальными,
+        и фильтр сбросит хвост шума.
+        """
         self._ensure_collection()
 
         dense_vector = await self._embedder.embed(query)
@@ -202,13 +216,20 @@ class RAGService:
             top_k=top_k,
         )
 
+        if not results:
+            return []
+
+        top_score = results[0]["score"]
+        threshold = top_score * SEARCH_RELATIVE_THRESHOLD
+        filtered = [r for r in results if r["score"] >= threshold]
+
         return [
             DocumentChunk(
                 content=r["content"],
                 source=r["source"],
                 score=r["score"],
             )
-            for r in results
+            for r in filtered
         ]
 
     def delete_document(self, source: str) -> None:
