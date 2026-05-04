@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
@@ -30,7 +31,6 @@ from app.llm.schemas import DebugInfo, TraceDetail, TraceSummary
 
 if TYPE_CHECKING:
     import uuid
-    from datetime import datetime
 
     from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -294,8 +294,10 @@ async def write_trace(
             )
             db.add(trace)
             await db.commit()
-    except BaseException:
-        # Журнал — best effort: ошибка записи не должна валить запрос
+    except Exception:
+        # Журнал — best effort: ошибка записи не должна валить запрос.
+        # Cancellation/SystemExit пробрасываем — они должны уметь останавливать
+        # фоновую задачу при shutdown'е сервера.
         logger.exception("Не удалось записать LLM-трейс")
 
 
@@ -308,7 +310,12 @@ async def list_traces(
     offset: int = 0,
     limit: int = 50,
 ) -> list[TraceSummary]:
-    """Список трейсов с фильтрами user_id / date_from / date_to и пагинацией."""
+    """Список трейсов с фильтрами user_id / date_from / date_to и пагинацией.
+
+    `date_to` интерпретируется как «по конец указанного дня включительно»:
+    если фронт прислал `2026-05-04T00:00:00`, фильтр захватит весь день до
+    `2026-05-05T00:00:00`. Это соответствует ожиданию date-picker'а.
+    """
     stmt = (
         select(LLMTrace, User.email)
         .join(User, User.id == LLMTrace.user_id)
@@ -319,7 +326,13 @@ async def list_traces(
     if date_from is not None:
         stmt = stmt.where(LLMTrace.created_at >= date_from)
     if date_to is not None:
-        stmt = stmt.where(LLMTrace.created_at <= date_to)
+        # Полночь date_to → захватываем весь этот день (< следующий день)
+        end = (
+            date_to + timedelta(days=1)
+            if date_to.hour == 0 and date_to.minute == 0 and date_to.second == 0
+            else date_to
+        )
+        stmt = stmt.where(LLMTrace.created_at < end)
 
     stmt = stmt.offset(offset).limit(limit)
     result = await db.execute(stmt)

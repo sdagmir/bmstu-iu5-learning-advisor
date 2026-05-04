@@ -38,6 +38,7 @@ interface SandboxPanelProps {
 }
 
 const PLACEHOLDER_PRESET = '__custom__'
+const STUDENT_PLACEHOLDER = '__none__'
 
 /**
  * Правая колонка RulesPage. Всегда видна, чтобы редактор не делал «вход в
@@ -45,8 +46,6 @@ const PLACEHOLDER_PRESET = '__custom__'
  * пересчёта на каждое изменение поля: эксперт явно жмёт «прогнать», иначе
  * на сложных правилах накопится много preview-вызовов.
  */
-const STUDENT_PLACEHOLDER = '__none__'
-
 export function SandboxPanel({
   profile,
   onProfileChange,
@@ -73,6 +72,10 @@ export function SandboxPanel({
     staleTime: 60_000,
   })
   const students = (usersQuery.data ?? []).filter((u) => u.role === 'student')
+  // Selected student хранится отдельно от loading-флага: после успешной
+  // загрузки Select продолжает показывать email — эксперт видит, что
+  // профиль явно загружен «из X», а не сорвался обратно в плейсхолдер.
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
   const [loadingStudentId, setLoadingStudentId] = useState<string | null>(null)
 
   const onPresetChange = (id: string) => {
@@ -80,6 +83,7 @@ export function SandboxPanel({
     const p = PRESETS.find((x) => x.id === id)
     if (!p) return
     setPreset(id)
+    setSelectedStudentId(null)
     onProfileReplace(p.profile)
   }
 
@@ -90,6 +94,7 @@ export function SandboxPanel({
       const snapshot = await adminCatalogApi.users.profileSnapshot(id)
       onProfileReplace(snapshot)
       setPreset(PLACEHOLDER_PRESET)
+      setSelectedStudentId(id)
     } catch (err) {
       toast.error(
         err instanceof Error
@@ -103,8 +108,13 @@ export function SandboxPanel({
 
   const handleProfileChange = (patch: Partial<SimulatorProfile>) => {
     setPreset(PLACEHOLDER_PRESET)
+    setSelectedStudentId(null)
     onProfileChange(patch)
   }
+
+  const selectedStudentEmail = selectedStudentId
+    ? students.find((s) => s.id === selectedStudentId)?.email ?? null
+    : null
 
   return (
     <div className="flex h-full min-w-0 flex-col">
@@ -163,7 +173,7 @@ export function SandboxPanel({
                 Загрузить из студента
               </span>
               <Select
-                value={loadingStudentId ?? STUDENT_PLACEHOLDER}
+                value={selectedStudentId ?? STUDENT_PLACEHOLDER}
                 onValueChange={onStudentSelect}
                 disabled={
                   usersQuery.isLoading ||
@@ -190,11 +200,17 @@ export function SandboxPanel({
                   ))}
                 </SelectContent>
               </Select>
-              {loadingStudentId && (
+              {loadingStudentId ? (
                 <span className="flex items-center gap-[var(--space-xs)] text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
                   <CircleNotch size={12} className="animate-spin" /> Подтягиваем
                   X1–X12 студента…
                 </span>
+              ) : (
+                selectedStudentEmail && (
+                  <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
+                    Профиль загружен из {selectedStudentEmail}
+                  </span>
+                )
               )}
             </div>
 

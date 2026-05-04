@@ -117,6 +117,9 @@ async def increment_rule_triggers(fired_numbers: list[int], db: AsyncSession) ->
     Обёрнуто в SAVEPOINT: если UPDATE упадёт (lock timeout, broken connection),
     откатится только nested-транзакция — основной запрос /my-recommendations
     спокойно вернёт рекомендации студенту.
+
+    Cancellation/SystemExit пробрасываем — счётчик это best-effort метрика,
+    но прерывания пользователя/сервера должны идти выше без задержки.
     """
     if not fired_numbers:
         return
@@ -128,7 +131,7 @@ async def increment_rule_triggers(fired_numbers: list[int], db: AsyncSession) ->
                 .values(trigger_count=Rule.trigger_count + 1)
                 .execution_options(synchronize_session=False)
             )
-    except BaseException:
+    except Exception:
         # Метрика — best effort: ошибка не должна валить ответ студенту
         logger.exception("Не удалось обновить trigger_count")
 

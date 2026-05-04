@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 
 from fastapi import APIRouter, BackgroundTasks
@@ -30,7 +31,11 @@ async def send_message(
         result = await chat_service.process_message(
             message=body.message, profile=profile, history=history
         )
-    except BaseException:
+    except asyncio.CancelledError:
+        # Клиент закрыл соединение — BackgroundTasks всё равно не выполнятся;
+        # пропускаем запись trace, пробрасываем cancel наверх.
+        raise
+    except Exception:
         latency_ms = int((time.monotonic() - started) * 1000)
         background.add_task(
             write_trace,
@@ -72,7 +77,10 @@ async def send_message_debug(
         result = await chat_service.process_message(
             message=body.message, profile=profile, history=history, debug=True
         )
-    except BaseException:
+    except asyncio.CancelledError:
+        # см. send_message — отмена не пишет trace
+        raise
+    except Exception:
         latency_ms = int((time.monotonic() - started) * 1000)
         background.add_task(
             write_trace,

@@ -42,7 +42,7 @@ if TYPE_CHECKING:
 WEAK_THRESHOLD = 4.0
 
 # Маппинг CareerGoal → имя CareerDirection (из seed-данных)
-_GOAL_TO_DIRECTION_NAME: dict[CareerGoal, str] = {
+GOAL_TO_DIRECTION_NAME: dict[CareerGoal, str] = {
     CareerGoal.ML: "ML / Data Science",
     CareerGoal.BACKEND: "Бэкенд-разработка",
     CareerGoal.FRONTEND: "Фронтенд-разработка",
@@ -174,7 +174,7 @@ async def _compute_coverage(
     if career_goal == CareerGoal.UNDECIDED:
         return CoverageLevel.LOW
 
-    direction_name = _GOAL_TO_DIRECTION_NAME.get(career_goal)
+    direction_name = GOAL_TO_DIRECTION_NAME.get(career_goal)
     if not direction_name:
         return CoverageLevel.LOW
 

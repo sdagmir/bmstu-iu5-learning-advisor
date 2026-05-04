@@ -198,9 +198,19 @@ async def seed_demo_account(db: AsyncSession) -> None:
     Профиль: 5-й семестр, цель ML, без ТП, обычная нагрузка, 3 пройденных ЦК
     (ML + Development), все оценки = 4 (без слабых баз). Создаётся только если
     `settings.demo_account_enabled` (на проде выключено).
+
+    Пароль обязателен (`DEMO_ACCOUNT_PASSWORD` в окружении) — не имеет
+    default'а в config.py, чтобы случайно не утёк через git.
     """
     if not settings.demo_account_enabled:
         return
+
+    if not settings.demo_account_password:
+        msg = (
+            "DEMO_ACCOUNT_ENABLED=true, но DEMO_ACCOUNT_PASSWORD пустой. "
+            "Задай пароль в окружении сервера (минимум 8 символов)."
+        )
+        raise ValueError(msg)
 
     from app.auth.service import auth_service
 
@@ -232,7 +242,8 @@ async def seed_demo_account(db: AsyncSession) -> None:
         db.add(StudentGrade(user_id=user.id, discipline_id=disc.id, grade=4))
 
     await db.flush()
-    logger.info("  + демо-аккаунт: %s (пароль: %s)", email, settings.demo_account_password)
+    # Пароль не логируем — даже в demo-режиме лучше не оставлять его в логах сервера
+    logger.info("  + демо-аккаунт создан: %s", email)
 
 
 # ── Запуск ─────────────────────────────────────────────────────────────────

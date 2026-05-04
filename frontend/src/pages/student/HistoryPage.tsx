@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CaretDown, CaretRight, ClockCounterClockwise } from '@phosphor-icons/react'
+import { CaretDown, CaretRight } from '@phosphor-icons/react'
 import { PageTopBar } from '@/components/common/PageTopBar'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -52,9 +52,6 @@ export default function HistoryPage() {
       <>
         <PageTopBar title="История" />
         <div className="mx-auto flex max-w-[600px] flex-col items-center gap-[var(--space-lg)] px-[var(--space-2xl)] py-[var(--space-3xl)] text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[color:var(--color-primary-soft)] text-[color:var(--color-primary)]">
-            <ClockCounterClockwise size={24} weight="regular" />
-          </div>
           <div className="flex flex-col gap-[var(--space-sm)]">
             <h1 className="font-serif text-[length:var(--text-xl)] font-semibold text-[color:var(--color-text)]">
               История пока пуста
@@ -78,15 +75,15 @@ export default function HistoryPage() {
   return (
     <>
       <PageTopBar title="История" />
-      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-[var(--space-base)] px-[var(--space-2xl)] py-[var(--space-xl)]">
+      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-[var(--space-lg)] px-[var(--space-2xl)] py-[var(--space-xl)]">
         <p className="text-[length:var(--text-sm)] text-[color:var(--color-text-muted)]">
-          {data.length}{' '}
+          <span className="tabular-nums">{data.length}</span>{' '}
           {pluralize(data.length, 'снапшот', 'снапшота', 'снапшотов')}
           {' · '}сверху — самый свежий
         </p>
-        <ol className="flex flex-col gap-[var(--space-base)]">
+        <ol className="flex flex-col">
           {data.map((snap) => (
-            <SnapshotCard
+            <SnapshotEntry
               key={snap.id}
               snapshot={snap}
               isExpanded={expandedId === snap.id}
@@ -101,16 +98,16 @@ export default function HistoryPage() {
   )
 }
 
-interface SnapshotCardProps {
+interface SnapshotEntryProps {
   snapshot: RecommendationSnapshot
   isExpanded: boolean
   onToggle: () => void
 }
 
-function SnapshotCard({ snapshot, isExpanded, onToggle }: SnapshotCardProps) {
+function SnapshotEntry({ snapshot, isExpanded, onToggle }: SnapshotEntryProps) {
   const recCount = snapshot.recommendations.length
   return (
-    <li className="flex flex-col gap-[var(--space-sm)] rounded-[8px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-[var(--space-base)]">
+    <li className="flex flex-col border-t border-[color:var(--color-border)] py-[var(--space-base)] first:border-t-0 first:pt-0">
       <button
         type="button"
         onClick={onToggle}
@@ -135,16 +132,16 @@ function SnapshotCard({ snapshot, isExpanded, onToggle }: SnapshotCardProps) {
           </span>
         </div>
         <span
+          aria-hidden="true"
           className={cn(
-            'mt-[2px] flex h-6 w-6 shrink-0 items-center justify-center rounded text-[color:var(--color-text-subtle)]',
-            'hover:bg-[color:var(--color-surface-hover)]',
+            'mt-[2px] flex h-6 w-6 shrink-0 items-center justify-center text-[color:var(--color-text-subtle)]',
           )}
         >
           {isExpanded ? <CaretDown size={14} /> : <CaretRight size={14} />}
         </span>
       </button>
       {isExpanded && recCount > 0 && (
-        <div className="flex flex-col border-t border-[color:var(--color-border)] pt-[var(--space-sm)]">
+        <div className="mt-[var(--space-sm)] flex flex-col">
           {snapshot.recommendations.map((rec) => (
             <RecommendationCard key={rec.rule_id} recommendation={rec} mode="user" />
           ))}

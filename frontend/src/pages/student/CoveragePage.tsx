@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Target } from '@phosphor-icons/react'
 import { PageTopBar } from '@/components/common/PageTopBar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
@@ -74,19 +73,12 @@ export default function CoveragePage() {
       <PageTopBar title="Покрытие" />
       <div className="mx-auto flex w-full max-w-[920px] flex-col gap-[var(--space-2xl)] px-[var(--space-2xl)] py-[var(--space-xl)]">
         <header className="flex flex-col gap-[var(--space-base)]">
-          <div className="flex items-baseline gap-[var(--space-md)]">
-            <Target
-              size={28}
-              weight="regular"
-              className="text-[color:var(--color-primary)]"
-            />
-            <h1 className="font-serif text-[length:var(--text-2xl)] font-semibold text-[color:var(--color-text)]">
-              <span className="tabular-nums">{percent.toFixed(1)}%</span>{' '}
-              <span className="font-normal text-[color:var(--color-text-muted)]">
-                целевого профиля закрыто
-              </span>
-            </h1>
-          </div>
+          <h1 className="font-serif text-[length:var(--text-2xl)] font-semibold text-[color:var(--color-text)]">
+            <span className="tabular-nums">{percent.toFixed(1)}%</span>{' '}
+            <span className="font-normal text-[color:var(--color-text-muted)]">
+              целевого профиля закрыто
+            </span>
+          </h1>
           <p className="text-[length:var(--text-sm)] text-[color:var(--color-text-muted)]">
             {groups.gaps.length > 0
               ? `${groups.gaps.length} компетенций для цели ещё не освоено — закрой их через ЦК или хорошие оценки в дисциплинах.`
@@ -192,14 +184,15 @@ function Section({ title, count, tone, description, items }: SectionProps) {
         {items.map((it) => (
           <li
             key={it.competency_id}
-            className={cn(
-              'flex flex-col gap-[2px] rounded-[6px] border bg-[color:var(--color-surface)] px-[var(--space-md)] py-[var(--space-sm)]',
-              tone === 'danger' && 'border-[color:var(--color-danger)]/30',
-              tone === 'ok' && 'border-[color:var(--color-border)]',
-              tone === 'muted' && 'border-[color:var(--color-border)]',
-            )}
+            className="flex flex-col gap-[2px] rounded-[6px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-[var(--space-md)] py-[var(--space-sm)]"
           >
-            <span className="text-[length:var(--text-sm)] font-medium text-[color:var(--color-text)]">
+            <span className="flex items-center gap-[var(--space-xs)] text-[length:var(--text-sm)] font-medium text-[color:var(--color-text)]">
+              {tone === 'danger' && (
+                <span
+                  aria-hidden="true"
+                  className="inline-block h-[6px] w-[6px] shrink-0 rounded-full bg-[color:var(--color-danger)]"
+                />
+              )}
               {it.name}
             </span>
             <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">

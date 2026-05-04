@@ -25,7 +25,7 @@ from app.db.models import (
     StudentCompletedCK,
     StudentGrade,
 )
-from app.users.profile_builder import _GOAL_TO_DIRECTION_NAME
+from app.users.profile_builder import GOAL_TO_DIRECTION_NAME
 
 if TYPE_CHECKING:
     import uuid
@@ -95,7 +95,7 @@ async def _load_needed_ids(user: User, db: AsyncSession) -> set[uuid.UUID]:
     if goal == CareerGoal.UNDECIDED:
         return set()
 
-    direction_name = _GOAL_TO_DIRECTION_NAME.get(goal)
+    direction_name = GOAL_TO_DIRECTION_NAME.get(goal)
     if not direction_name:
         return set()
 

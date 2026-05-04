@@ -101,22 +101,28 @@ export function RecommendationCard({
         {recommendation.reasoning}
       </p>
 
-      {/* Meta tail */}
-      {(recommendation.competency_gap || (mode === 'admin' && triggerCount !== undefined)) && (
-        <div className="flex flex-wrap items-center gap-[var(--space-xs)] text-[length:var(--text-xs)] tabular-nums text-[color:var(--color-text-subtle)]">
-          {recommendation.competency_gap && (
-            <span>
-              закрывает компетенцию: <span className="font-mono">{recommendation.competency_gap}</span>
-            </span>
-          )}
-          {mode === 'admin' && triggerCount !== undefined && (
-            <>
-              {recommendation.competency_gap && <span aria-hidden>·</span>}
-              <span>сработало {triggerCount}×</span>
-            </>
-          )}
-        </div>
-      )}
+      {/* Meta tail — admin-only.
+         В user-режиме `competency_gap` бесполезен: это сырой UID компетенции
+         (например `ml_basics`), а человеческое имя сюда не приходит. Бренд:
+         monospace ID — только в админке. Закрытые компетенции у студента
+         отображаются на /coverage. */}
+      {mode === 'admin' &&
+        (recommendation.competency_gap || triggerCount !== undefined) && (
+          <div className="flex flex-wrap items-center gap-[var(--space-xs)] text-[length:var(--text-xs)] tabular-nums text-[color:var(--color-text-subtle)]">
+            {recommendation.competency_gap && (
+              <span>
+                закрывает:{' '}
+                <span className="font-mono">{recommendation.competency_gap}</span>
+              </span>
+            )}
+            {triggerCount !== undefined && (
+              <>
+                {recommendation.competency_gap && <span aria-hidden>·</span>}
+                <span>сработало {triggerCount}×</span>
+              </>
+            )}
+          </div>
+        )}
 
       {/* Disclosure — показываем ТОЛЬКО когда есть что развернуть. Иначе
          кнопка ничего не делала бы и сбивала с толку. */}

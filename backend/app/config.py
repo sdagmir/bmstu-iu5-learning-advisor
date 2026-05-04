@@ -41,10 +41,12 @@ class Settings(BaseSettings):
     debug: bool = False
     cors_origins: list[str] = ["http://localhost:3000"]
 
-    # Демо-аккаунт для защиты диплома (Phase 11 фронта)
+    # Демо-аккаунт для защиты диплома (Phase 11 фронта).
+    # Пароль НЕ имеет default'а — задаётся через env при `demo_account_enabled=true`.
+    # Если флаг включён, но пароль пустой, `seed_demo_account` бросит ValueError.
     demo_account_enabled: bool = False
     demo_account_email: str = "demo@rsito.student"
-    demo_account_password: str = "demo-rsito-2026"
+    demo_account_password: str = ""
 
     @field_validator("jwt_secret_key")
     @classmethod

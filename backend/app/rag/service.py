@@ -15,7 +15,9 @@
 from __future__ import annotations
 
 import logging
+import time
 from datetime import UTC, datetime
+from typing import Any
 
 from app.rag.bm25 import BM25Encoder
 from app.rag.embedder import EmbeddingClient
@@ -30,6 +32,10 @@ CHUNK_OVERLAP = 50
 
 # Батч для эмбеддингов (лимит API)
 EMBEDDING_BATCH_SIZE = 64
+
+# TTL кэша списка документов (sec) — балансирует частоту scroll-обхода Qdrant
+# и свежесть после upload/delete (мутации сами инвалидируют кэш)
+DOCUMENTS_CACHE_TTL = 60.0
 
 
 def split_into_chunks(
@@ -84,6 +90,9 @@ class RAGService:
         self._initialized = False
         # Кэш всех чанков для BM25 пересчёта
         self._all_chunks: list[str] = []
+        # TTL-кэш агрегатов по source для GET /rag/documents
+        self._docs_cache: list[dict[str, Any]] | None = None
+        self._docs_cache_at: float = 0.0
 
     def _ensure_collection(self) -> None:
         """Создать коллекцию при первом использовании."""
@@ -176,6 +185,7 @@ class RAGService:
                 },
             )
 
+        self._invalidate_docs_cache()
         logger.info("Проиндексировано: %s (%d чанков)", source, len(chunks))
         return len(chunks)
 
@@ -209,6 +219,7 @@ class RAGService:
         old_chunks = self._source_chunks.pop(source, set())
         self._all_chunks = [c for c in self._all_chunks if c not in old_chunks]
         self._rebuild_bm25()
+        self._invalidate_docs_cache()
 
         logger.info("Удалён документ: %s", source)
 
@@ -220,10 +231,24 @@ class RAGService:
         """Список уникальных source с агрегатами (chunks_count, indexed_at).
 
         Пагинация — по списку источников (не по чанкам), отсортированных
-        алфавитно для стабильности.
+        алфавитно для стабильности. Результат кэшируется на 60 сек, чтобы
+        админский UI не ронял Qdrant scroll'ами на каждом open-page.
+        Мутации (`index_document` / `delete_document`) инвалидируют кэш
+        локально через `_invalidate_docs_cache()`.
         """
         self._ensure_collection()
-        rows = self._qdrant.aggregate_sources()
+
+        now = time.monotonic()
+        if (
+            self._docs_cache is not None
+            and now - self._docs_cache_at < DOCUMENTS_CACHE_TTL
+        ):
+            rows = self._docs_cache
+        else:
+            rows = self._qdrant.aggregate_sources()
+            self._docs_cache = rows
+            self._docs_cache_at = now
+
         page = rows[offset : offset + limit]
         return [
             RAGDocumentSummary(
@@ -235,6 +260,11 @@ class RAGService:
             )
             for row in page
         ]
+
+    def _invalidate_docs_cache(self) -> None:
+        """Сбросить TTL-кэш `list_documents` (после upload/delete)."""
+        self._docs_cache = None
+        self._docs_cache_at = 0.0
 
     async def close(self) -> None:
         await self._embedder.close()
