@@ -217,6 +217,33 @@ export interface ChatResponse {
   debug: ChatReplyDebug | null
 }
 
+// --- RAG (Phase 10) ---
+
+export interface RagDocumentChunk {
+  content: string
+  source: string
+  score: number
+}
+
+export interface RagSearchRequest {
+  query: string
+  top_k?: number
+}
+
+export interface RagDocumentUpload {
+  source: string
+  text: string
+}
+
+export interface RagDocumentUploadResult {
+  source: string
+  chunks_count: number
+}
+
+export interface RagStats {
+  total_chunks: number
+}
+
 // --- Admin: Каталог (Phase 9) ---
 
 /** Категория компетенции (бэк: `CompetencyCategory`). */

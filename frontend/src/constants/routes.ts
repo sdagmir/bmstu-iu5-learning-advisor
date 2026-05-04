@@ -20,7 +20,6 @@ export const routes = {
     rules: '/admin/rules',
     simulator: '/admin/simulator',
     traces: '/admin/traces',
-    trace: (id: string) => `/admin/traces/${id}`,
     catalog: (entity: string) => `/admin/catalog/${entity}`,
     knowledge: '/admin/knowledge',
     users: '/admin/users',

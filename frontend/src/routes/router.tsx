@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { RequireAuth, RequireAdmin, RedirectIfAuth } from './guards'
 import { StudentShell } from '@/shells/StudentShell'
 import { AdminShell } from '@/shells/AdminShell'
+import { ErrorPage } from '@/components/common/ErrorPage'
 
 import LoginPage from '@/pages/auth/LoginPage'
 import RegisterPage from '@/pages/auth/RegisterPage'
@@ -19,7 +20,6 @@ import DashboardPage from '@/pages/admin/DashboardPage'
 import RulesPage from '@/pages/admin/RulesPage'
 import SimulatorPage from '@/pages/admin/SimulatorPage'
 import TracesPage from '@/pages/admin/TracesPage'
-import TraceDetailPage from '@/pages/admin/TraceDetailPage'
 import CatalogPage from '@/pages/admin/CatalogPage'
 import KnowledgePage from '@/pages/admin/KnowledgePage'
 import UsersPage from '@/pages/admin/UsersPage'
@@ -32,6 +32,7 @@ export const router = createBrowserRouter([
         <LoginPage />
       </RedirectIfAuth>
     ),
+    errorElement: <ErrorPage />,
   },
   {
     path: '/register',
@@ -40,6 +41,7 @@ export const router = createBrowserRouter([
         <RegisterPage />
       </RedirectIfAuth>
     ),
+    errorElement: <ErrorPage />,
   },
   {
     path: '/',
@@ -48,15 +50,20 @@ export const router = createBrowserRouter([
         <StudentShell />
       </RequireAuth>
     ),
+    errorElement: <ErrorPage />,
     children: [
-      { index: true, element: <HomePage /> },
-      { path: 'onboarding', element: <OnboardingPage /> },
-      { path: 'chat', element: <ChatPage /> },
-      { path: 'profile', element: <ProfilePage /> },
-      { path: 'coverage', element: <CoveragePage /> },
-      { path: 'history', element: <HistoryPage /> },
-      { path: 'recommendations/:id', element: <RecommendationDetailPage /> },
-      { path: 'dev/cards', element: <CardsDemoPage /> },
+      { index: true, element: <HomePage />, errorElement: <ErrorPage /> },
+      { path: 'onboarding', element: <OnboardingPage />, errorElement: <ErrorPage /> },
+      { path: 'chat', element: <ChatPage />, errorElement: <ErrorPage /> },
+      { path: 'profile', element: <ProfilePage />, errorElement: <ErrorPage /> },
+      { path: 'coverage', element: <CoveragePage />, errorElement: <ErrorPage /> },
+      { path: 'history', element: <HistoryPage />, errorElement: <ErrorPage /> },
+      {
+        path: 'recommendations/:id',
+        element: <RecommendationDetailPage />,
+        errorElement: <ErrorPage />,
+      },
+      { path: 'dev/cards', element: <CardsDemoPage />, errorElement: <ErrorPage /> },
     ],
   },
   {
@@ -66,15 +73,15 @@ export const router = createBrowserRouter([
         <AdminShell />
       </RequireAdmin>
     ),
+    errorElement: <ErrorPage />,
     children: [
-      { index: true, element: <DashboardPage /> },
-      { path: 'rules', element: <RulesPage /> },
-      { path: 'simulator', element: <SimulatorPage /> },
-      { path: 'traces', element: <TracesPage /> },
-      { path: 'traces/:id', element: <TraceDetailPage /> },
-      { path: 'catalog/:entity', element: <CatalogPage /> },
-      { path: 'knowledge', element: <KnowledgePage /> },
-      { path: 'users', element: <UsersPage /> },
+      { index: true, element: <DashboardPage />, errorElement: <ErrorPage /> },
+      { path: 'rules', element: <RulesPage />, errorElement: <ErrorPage /> },
+      { path: 'simulator', element: <SimulatorPage />, errorElement: <ErrorPage /> },
+      { path: 'traces', element: <TracesPage />, errorElement: <ErrorPage /> },
+      { path: 'catalog/:entity', element: <CatalogPage />, errorElement: <ErrorPage /> },
+      { path: 'knowledge', element: <KnowledgePage />, errorElement: <ErrorPage /> },
+      { path: 'users', element: <UsersPage />, errorElement: <ErrorPage /> },
     ],
   },
   { path: '*', element: <Navigate to="/" replace /> },

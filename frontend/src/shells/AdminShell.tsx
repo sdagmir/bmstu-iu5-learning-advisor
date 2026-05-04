@@ -5,7 +5,6 @@ import {
   Flask,
   Stack,
   BookOpen,
-  UsersThree,
   ListMagnifyingGlass,
   ArrowUUpLeft,
 } from '@phosphor-icons/react'
@@ -13,14 +12,16 @@ import { routes } from '@/constants/routes'
 import { Logo } from '@/components/common/Logo'
 import { cn } from '@/lib/utils'
 
+// «Пользователи» специально не выносим в sidebar — они уже доступны
+// табом внутри `Каталог`. Из-за `end:false` на «Каталог» при /admin/catalog/users
+// подсвечивались бы оба пункта одновременно.
 const NAV_ITEMS = [
   { to: routes.admin.root, label: 'Дашборд', icon: SquaresFour, end: true },
   { to: routes.admin.rules, label: 'Правила', icon: Scales, end: false },
   { to: routes.admin.simulator, label: 'Симулятор', icon: Flask, end: false },
-  { to: routes.admin.traces, label: 'Трейсы', icon: ListMagnifyingGlass, end: false },
+  { to: routes.admin.traces, label: 'Debug-чат', icon: ListMagnifyingGlass, end: false },
   { to: routes.admin.catalog('competencies'), label: 'Каталог', icon: Stack, end: false },
   { to: routes.admin.knowledge, label: 'База знаний', icon: BookOpen, end: false },
-  { to: routes.admin.users, label: 'Пользователи', icon: UsersThree, end: false },
 ]
 
 /**
