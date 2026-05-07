@@ -54,10 +54,13 @@ export function RecommendationCard({
   // Раскрытие что-то даёт только если: reasoning обрезан line-clamp-2 (>120 симв.),
   // ИЛИ есть описание курса из БД, ИЛИ переданы relatedCompetencies.
   // Иначе кнопка «Подробнее» — пустышка, скрываем.
+  // Если задан linkTo (карточка ведёт на детальную страницу) — inline-expand
+  // не показываем вообще, чтобы не дублировать UX.
   const hasMoreContent =
-    recommendation.reasoning.length > 120 ||
-    Boolean(recommendation.linked_course?.description) ||
-    (relatedCompetencies !== undefined && relatedCompetencies.length > 0)
+    !linkTo &&
+    (recommendation.reasoning.length > 120 ||
+      Boolean(recommendation.linked_course?.description) ||
+      (relatedCompetencies !== undefined && relatedCompetencies.length > 0))
 
   return (
     <article className="group flex flex-col gap-[var(--space-sm)] rounded-[6px] px-[var(--space-base)] py-[var(--space-base)] transition-colors hover:bg-[color:var(--color-surface-muted)]">

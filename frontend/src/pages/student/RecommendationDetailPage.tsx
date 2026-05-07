@@ -67,19 +67,59 @@ export default function RecommendationDetailPage() {
               {rec.title}
             </h1>
 
-            <p className="text-[length:var(--text-md)] leading-relaxed text-[color:var(--color-text)]">
-              {rec.reasoning}
-            </p>
+            {/* Meta-строка курса — повторяет карточку с главной, но полнее.
+                Показываем только когда linked_course пришёл (только category=ck_course
+                с совпавшим title). */}
+            {rec.linked_course && (
+              <p className="text-[length:var(--text-sm)] tabular-nums text-[color:var(--color-text-muted)]">
+                {rec.linked_course.credits} ЕЗ · программа ЦК
+              </p>
+            )}
 
+            {/* Обоснование — почему именно эта рекомендация студенту */}
+            <section className="flex flex-col gap-[var(--space-xs)]">
+              <h2 className="text-[length:var(--text-xs)] tracking-wider text-[color:var(--color-text-subtle)] uppercase">
+                Почему рекомендуем
+              </h2>
+              <p className="text-[length:var(--text-md)] leading-relaxed text-[color:var(--color-text)]">
+                {rec.reasoning}
+              </p>
+            </section>
+
+            {/* О программе — описание курса из БД. Только для category=ck_course
+                с непустым description. Здесь, в отличие от карточки, разворачиваем
+                сразу — деталка для того и нужна. */}
+            {rec.linked_course?.description && (
+              <section className="flex flex-col gap-[var(--space-xs)] border-t border-[color:var(--color-border)] pt-[var(--space-base)]">
+                <h2 className="text-[length:var(--text-xs)] tracking-wider text-[color:var(--color-text-subtle)] uppercase">
+                  О программе
+                </h2>
+                <p className="text-[length:var(--text-md)] leading-relaxed text-[color:var(--color-text)]">
+                  {rec.linked_course.description}
+                </p>
+              </section>
+            )}
+
+            {/* Подсказка про карьерный gap — кликабельная, ведёт на /coverage,
+                чтобы студент увидел свой прогресс по компетенциям. UID не показываем —
+                это не для глаз пользователя. */}
             {rec.competency_gap && (
-              <div className="flex flex-col gap-[var(--space-xs)] border-t border-[color:var(--color-border)] pt-[var(--space-base)]">
-                <span className="text-[length:var(--text-xs)] tracking-wider text-[color:var(--color-text-subtle)] uppercase">
-                  Закрывает компетенцию
-                </span>
-                <span className="font-mono text-[length:var(--text-base)] text-[color:var(--color-text)]">
-                  {rec.competency_gap}
-                </span>
-              </div>
+              <section className="flex flex-col gap-[var(--space-xs)] border-t border-[color:var(--color-border)] pt-[var(--space-base)]">
+                <h2 className="text-[length:var(--text-xs)] tracking-wider text-[color:var(--color-text-subtle)] uppercase">
+                  Закрывает пробел
+                </h2>
+                <p className="text-[length:var(--text-sm)] leading-relaxed text-[color:var(--color-text-muted)]">
+                  Эта рекомендация закрывает компетенцию из твоего целевого
+                  профиля. Полный список покрытия —{' '}
+                  <Link
+                    to={routes.coverage}
+                    className="text-[color:var(--color-primary)] underline-offset-4 hover:underline focus-visible:underline"
+                  >
+                    в радаре компетенций
+                  </Link>
+                  .
+                </p>
+              </section>
             )}
           </article>
         )}
