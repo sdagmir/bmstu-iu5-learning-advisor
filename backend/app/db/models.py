@@ -164,15 +164,15 @@ class User(Base):
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.STUDENT)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    # Поля профиля студента (nullable для админов)
+    # Поля профиля студента — все nullable, дефолтов НЕТ. Пустое значение
+    # означает «студент ещё не выбрал», и онбординг это видит.
+    # Дефолты раньше были (NONE/NORMAL) и ломали wizard: фронт-чек
+    # `isProfileMinimallyComplete` считал профиль готовым после двух шагов,
+    # т.к. два других поля приходили с бэка уже заполненными.
     semester: Mapped[int | None] = mapped_column(Integer)
     career_goal: Mapped[CareerGoal | None] = mapped_column(Enum(CareerGoal))
-    technopark_status: Mapped[TechparkStatus | None] = mapped_column(
-        Enum(TechparkStatus), default=TechparkStatus.NONE
-    )
-    workload_pref: Mapped[WorkloadPref | None] = mapped_column(
-        Enum(WorkloadPref), default=WorkloadPref.NORMAL
-    )
+    technopark_status: Mapped[TechparkStatus | None] = mapped_column(Enum(TechparkStatus))
+    workload_pref: Mapped[WorkloadPref | None] = mapped_column(Enum(WorkloadPref))
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
