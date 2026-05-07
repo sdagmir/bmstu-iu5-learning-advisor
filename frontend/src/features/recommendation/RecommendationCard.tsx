@@ -51,11 +51,12 @@ export function RecommendationCard({
   const categoryLabel = RECOMMENDATION_CATEGORY_LABELS[recommendation.category]
   const priorityLabel = RECOMMENDATION_PRIORITY_LABELS[recommendation.priority]
 
-  // Раскрытие что-то даёт только если: reasoning потенциально обрезан
-  // line-clamp-2 (эвристика: >120 символов) ИЛИ переданы relatedCompetencies.
+  // Раскрытие что-то даёт только если: reasoning обрезан line-clamp-2 (>120 симв.),
+  // ИЛИ есть описание курса из БД, ИЛИ переданы relatedCompetencies.
   // Иначе кнопка «Подробнее» — пустышка, скрываем.
   const hasMoreContent =
     recommendation.reasoning.length > 120 ||
+    Boolean(recommendation.linked_course?.description) ||
     (relatedCompetencies !== undefined && relatedCompetencies.length > 0)
 
   return (
@@ -91,6 +92,15 @@ export function RecommendationCard({
         )}
       </h3>
 
+      {/* Meta курса — отдельной строкой под title. Показываем только когда
+          ck_course успешно подтянулся из БД (title совпал с ck_courses.name).
+          Сообщает студенту базовую конкретику: что за курс, ЕЗ. */}
+      {recommendation.linked_course && (
+        <p className="text-[length:var(--text-xs)] tabular-nums text-[color:var(--color-text-subtle)]">
+          {recommendation.linked_course.credits} ЕЗ · программа ЦК
+        </p>
+      )}
+
       {/* Reasoning snippet — line-clamp-2 в свёрнутом, full в раскрытом */}
       <p
         className={cn(
@@ -100,6 +110,14 @@ export function RecommendationCard({
       >
         {recommendation.reasoning}
       </p>
+
+      {/* Описание курса из БД — раскрывается только в expanded.
+          Чтобы карточка не пухла на главной — скрываем за «Подробнее». */}
+      {expanded && recommendation.linked_course?.description && (
+        <p className="text-[length:var(--text-sm)] leading-relaxed text-[color:var(--color-text)]">
+          {recommendation.linked_course.description}
+        </p>
+      )}
 
       {/* Meta tail — admin-only.
          В user-режиме `competency_gap` бесполезен: это сырой UID компетенции

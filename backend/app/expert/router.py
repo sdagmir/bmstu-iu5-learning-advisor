@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from app.dependencies import CurrentAdmin, CurrentUser, DbSession, PageLimit, PageOffset
 from app.expert.schemas import Recommendation, RecommendationSnapshot, StudentProfile
 from app.expert.service import (
+    enrich_with_courses,
     expert_service,
     increment_rule_triggers,
     list_recommendation_history,
@@ -26,7 +27,7 @@ async def my_recommendations(user: CurrentUser, db: DbSession) -> list[Recommend
     profile = await build_student_profile(user, db)
     trace, recommendations = expert_service.get_recommendations_debug(profile)
     await increment_rule_triggers(trace.fired_rule_numbers, db)
-    return recommendations
+    return await enrich_with_courses(recommendations, db)
 
 
 @router.get("/recommendations/history", response_model=list[RecommendationSnapshot])

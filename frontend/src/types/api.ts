@@ -184,6 +184,13 @@ export type RecommendationPriority = 'high' | 'medium' | 'low'
  * Y1–Y6 — выход ЭС. Совпадает с ответом `POST /expert/evaluate`.
  * `competency_gap` — UID компетенции, которую закрывает рекомендация (или null).
  */
+export interface CKCourseLink {
+  name: string
+  description: string | null
+  category: string
+  credits: number
+}
+
 export interface Recommendation {
   rule_id: string
   category: RecommendationCategory
@@ -191,6 +198,8 @@ export interface Recommendation {
   priority: RecommendationPriority
   reasoning: string
   competency_gap: string | null
+  /** Для category=ck_course — детальная инфа курса из БД, если title совпал. */
+  linked_course?: CKCourseLink | null
 }
 
 // --- Chat ---

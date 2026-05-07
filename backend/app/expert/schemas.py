@@ -59,6 +59,20 @@ class StudentProfile(BaseModel):
     ck_count_in_category: CKCategoryCount = CKCategoryCount.FEW  # X12
 
 
+class CKCourseLink(BaseModel):
+    """Минимальная инфа о привязанном курсе ЦК — для UI-обогащения карточки.
+
+    Заполняется только для рекомендаций category=ck_course, у которых
+    `Recommendation.title` совпадает с `ck_courses.name`. Для остальных
+    категорий (focus/coursework/technopark/warning/strategy) — None.
+    """
+
+    name: str
+    description: str | None = None
+    category: str
+    credits: int
+
+
 class Recommendation(BaseModel):
     """Одна рекомендация экспертной системы."""
 
@@ -68,6 +82,9 @@ class Recommendation(BaseModel):
     priority: RecommendationPriority
     reasoning: str
     competency_gap: str | None = None
+    # Опциональное обогащение: если category=ck_course и title совпал
+    # с записью в ck_courses — приходит детальная инфа курса.
+    linked_course: CKCourseLink | None = None
 
 
 class RecommendationSnapshot(BaseModel):

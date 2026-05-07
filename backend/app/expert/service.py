@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select, update
 
-from app.db.models import RecommendationHistory, Rule
+from app.db.models import CKCourse, RecommendationCategory, RecommendationHistory, Rule
 from app.expert.engine import EvaluationTrace, PythonRuleEngine, RuleData
 from app.expert.rules_data import get_all_rules
-from app.expert.schemas import RecommendationSnapshot
+from app.expert.schemas import CKCourseLink, RecommendationSnapshot
 from app.users.profile_builder import build_student_profile
 
 if TYPE_CHECKING:
@@ -105,6 +105,43 @@ async def capture_recommendation_snapshot(
     )
     db.add(entry)
     await db.flush()
+
+
+async def enrich_with_courses(
+    recommendations: list[Recommendation], db: AsyncSession
+) -> list[Recommendation]:
+    """Подтягивает данные курса ЦК к рекомендациям category=ck_course.
+
+    Один SELECT IN(...) по `ck_courses.name` для всех ck_course-рекомендаций
+    в списке. Не-ck_course рекомендации проходят насквозь без модификации.
+    Если для title нет совпадения в БД (например R52-fallback «Программа
+    из другой категории ЦК»), `linked_course` остаётся None.
+    """
+    ck_titles = [
+        r.title for r in recommendations if r.category == RecommendationCategory.CK_COURSE
+    ]
+    if not ck_titles:
+        return recommendations
+
+    result = await db.execute(select(CKCourse).where(CKCourse.name.in_(ck_titles)))
+    by_name: dict[str, CKCourse] = {c.name: c for c in result.scalars().all()}
+
+    enriched: list[Recommendation] = []
+    for r in recommendations:
+        course = by_name.get(r.title) if r.category == RecommendationCategory.CK_COURSE else None
+        if course is not None:
+            r = r.model_copy(
+                update={
+                    "linked_course": CKCourseLink(
+                        name=course.name,
+                        description=course.description,
+                        category=course.category.value,
+                        credits=course.credits,
+                    )
+                }
+            )
+        enriched.append(r)
+    return enriched
 
 
 async def increment_rule_triggers(fired_numbers: list[int], db: AsyncSession) -> None:
