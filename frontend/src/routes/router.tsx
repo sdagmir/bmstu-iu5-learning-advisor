@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
-import { RequireAuth, RequireAdmin, RedirectIfAuth } from './guards'
+import { RequireAuth, RequireAdmin, RequireStudentProfile, RedirectIfAuth } from './guards'
 import { StudentShell } from '@/shells/StudentShell'
 import { AdminShell } from '@/shells/AdminShell'
 import { ErrorPage } from '@/components/common/ErrorPage'
@@ -47,7 +47,9 @@ export const router = createBrowserRouter([
     path: '/',
     element: (
       <RequireAuth>
-        <StudentShell />
+        <RequireStudentProfile>
+          <StudentShell />
+        </RequireStudentProfile>
       </RequireAuth>
     ),
     errorElement: <ErrorPage />,
