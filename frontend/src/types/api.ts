@@ -421,8 +421,8 @@ export interface AdminUser {
 }
 
 export interface AdminUserUpdate {
-  role?: UserRole
-  is_active?: boolean
+  role?: UserRole | undefined
+  is_active?: boolean | undefined
 }
 
 // --- Admin: Конструктор правил ЭС (Phase 7) ---

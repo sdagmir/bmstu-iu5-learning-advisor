@@ -37,7 +37,8 @@ export default function SimulatorPage() {
   )
   const { profile, update, replace, result, isPending } = useSimulator(initial)
   // Подтягиваем все правила, чтобы прокинуть trigger_count в admin-карточки
-  const { data: rules } = useRules()
+  const { list: rulesQuery } = useRules()
+  const rules = rulesQuery.data
 
   const onPresetChange = (id: string) => {
     if (id === PLACEHOLDER_PRESET) return
@@ -123,7 +124,7 @@ export default function SimulatorPage() {
                     key={rec.rule_id}
                     recommendation={rec}
                     mode="admin"
-                    triggerCount={rule?.trigger_count}
+                    triggerCount={rule?.trigger_count ?? 0}
                   />
                 )
               })}

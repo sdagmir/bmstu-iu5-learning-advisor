@@ -79,8 +79,49 @@ def create_app() -> FastAPI:
 
     _register_exception_handlers(app)
     _register_routers(app)
+    _register_health_endpoints(app)
 
     return app
+
+
+def _register_health_endpoints(app: FastAPI) -> None:
+    """Liveness и readiness — для docker-compose / k8s healthcheck."""
+    from sqlalchemy import text
+
+    from app.db.database import async_session_factory
+    from app.rag.service import rag_service
+
+    @app.get("/health", tags=["health"], include_in_schema=False)
+    async def liveness() -> dict[str, str]:
+        # Сам процесс жив — отвечает 200. Без проверки внешних зависимостей,
+        # чтобы временные сбои PG/Qdrant не вызывали restart контейнера.
+        return {"status": "ok"}
+
+    @app.get("/health/ready", tags=["health"], include_in_schema=False)
+    async def readiness() -> JSONResponse:
+        # Проверяем критичные зависимости. Если какая-то лежит — 503.
+        checks: dict[str, str] = {}
+        ok = True
+
+        try:
+            async with async_session_factory() as db:
+                await db.execute(text("SELECT 1"))
+            checks["postgres"] = "ok"
+        except BaseException as exc:
+            checks["postgres"] = f"error: {exc.__class__.__name__}"
+            ok = False
+
+        try:
+            rag_service._qdrant.count()
+            checks["qdrant"] = "ok"
+        except BaseException as exc:
+            checks["qdrant"] = f"error: {exc.__class__.__name__}"
+            ok = False
+
+        return JSONResponse(
+            status_code=200 if ok else 503,
+            content={"status": "ok" if ok else "degraded", "checks": checks},
+        )
 
 
 def _register_routers(app: FastAPI) -> None:

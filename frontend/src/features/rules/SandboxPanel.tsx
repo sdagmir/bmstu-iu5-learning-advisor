@@ -285,7 +285,7 @@ export function SandboxPanel({
                         key={rec.rule_id}
                         recommendation={rec}
                         mode="admin"
-                        triggerCount={rule?.trigger_count}
+                        triggerCount={rule?.trigger_count ?? 0}
                         onRuleClick={(rid) => {
                           const n = Number((rid.match(/\d+/) ?? [])[0])
                           const r = rules?.find((x) => x.number === n)

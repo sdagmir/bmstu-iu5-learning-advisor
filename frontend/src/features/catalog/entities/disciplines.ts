@@ -17,7 +17,7 @@ const schema = z.object({
   credits: z.number().int().min(1, 'Не меньше 1'),
   type: z.enum(ALL_DISCIPLINE_TYPES as readonly [DisciplineType, ...DisciplineType[]]),
   control_form: z.string().min(1, 'Форма контроля обязательна').max(50),
-  department: z.string().nullable().optional(),
+  department: z.string().nullable(),
   competency_ids: z.array(z.string()),
 })
 
@@ -107,7 +107,7 @@ export const disciplinesConfig: EntityConfig<AdminDiscipline, AdminDisciplineCre
     credits: 3,
     type: 'mandatory',
     control_form: '',
-    department: '',
+    department: null,
     competency_ids: [],
   }),
   rowLabel: (row) => row.name,

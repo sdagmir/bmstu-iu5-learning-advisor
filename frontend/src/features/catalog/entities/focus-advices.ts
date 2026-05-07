@@ -10,7 +10,7 @@ const schema = z.object({
   discipline_id: z.string().uuid('Выбери дисциплину'),
   career_direction_id: z.string().uuid('Выбери направление'),
   focus_advice: z.string().min(1, 'Текст совета обязателен'),
-  reasoning: z.string().nullable().optional(),
+  reasoning: z.string().nullable(),
 })
 
 export const focusAdvicesConfig: EntityConfig<

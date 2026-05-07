@@ -8,8 +8,8 @@ import type {
 
 const schema = z.object({
   name: z.string().min(1, 'Название обязательно').max(100),
-  description: z.string().nullable().optional(),
-  example_jobs: z.string().nullable().optional(),
+  description: z.string().nullable(),
+  example_jobs: z.string().nullable(),
   competency_ids: z.array(z.string()),
 })
 

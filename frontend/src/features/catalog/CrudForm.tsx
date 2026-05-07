@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useForm, Controller, type Path, type DefaultValues } from 'react-hook-form'
+import {
+  useForm,
+  Controller,
+  type Path,
+  type DefaultValues,
+  type Resolver,
+  type Control,
+} from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CircleNotch } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
@@ -64,8 +71,11 @@ export function CrudForm<TRead extends { id: string }, TForm extends Record<stri
     [isEdit, row, config],
   )
 
+  const resolver = zodResolver(
+    config.schema as never,
+  ) as unknown as Resolver<TForm>
   const form = useForm<TForm>({
-    resolver: zodResolver(config.schema),
+    resolver,
     defaultValues,
   })
 
@@ -90,7 +100,7 @@ export function CrudForm<TRead extends { id: string }, TForm extends Record<stri
         </DialogHeader>
 
         <form
-          onSubmit={form.handleSubmit((values) => onSubmit(values))}
+          onSubmit={form.handleSubmit((values) => onSubmit(values as TForm))}
           className="flex min-h-0 flex-1 flex-col"
         >
           <div className="flex-1 overflow-y-auto px-[var(--space-2xl)] py-[var(--space-base)]">
@@ -99,7 +109,7 @@ export function CrudForm<TRead extends { id: string }, TForm extends Record<stri
                 <FieldRow
                   key={field.name}
                   field={field}
-                  control={form.control}
+                  control={form.control as unknown as Control<TForm>}
                   register={form.register}
                   error={form.formState.errors[field.name]?.message as string | undefined}
                   readOnly={isEdit && Boolean(field.readOnlyOnEdit)}
@@ -134,8 +144,8 @@ interface FieldRowProps<TForm extends Record<string, unknown>> {
   // проксируем как unknown-проп. Все типы зафиксированы выше через `useForm<TForm>`.
   control: ReturnType<typeof useForm<TForm>>['control']
   register: ReturnType<typeof useForm<TForm>>['register']
-  error?: string
-  readOnly?: boolean
+  error?: string | undefined
+  readOnly?: boolean | undefined
 }
 
 function FieldRow<TForm extends Record<string, unknown>>({
@@ -273,8 +283,8 @@ interface StaticSelectProps {
   value: string | undefined
   onValueChange: (v: string) => void
   options: FieldConfig<Record<string, unknown>>['options']
-  placeholder?: string
-  disabled?: boolean
+  placeholder?: string | undefined
+  disabled?: boolean | undefined
 }
 
 /**
@@ -287,7 +297,7 @@ function StaticSelect({ value, onValueChange, options, placeholder, disabled }: 
   return (
     <Select
       onValueChange={onValueChange}
-      disabled={disabled}
+      {...(disabled !== undefined ? { disabled } : {})}
       {...(value !== undefined && value !== '' ? { value } : {})}
     >
       <SelectTrigger className="w-full">
@@ -308,7 +318,7 @@ interface ChipMultiSelectProps {
   value: string[]
   onChange: (next: string[]) => void
   options: FieldConfig<Record<string, unknown>>['options']
-  disabled?: boolean
+  disabled?: boolean | undefined
 }
 
 /**

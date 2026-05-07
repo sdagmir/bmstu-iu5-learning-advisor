@@ -70,7 +70,9 @@ export default function CatalogPage() {
         ))}
       </nav>
 
-      <CrudTable config={config} />
+      {/* Union из 6 EntityConfig — CrudTable принимает один; cast безопасен,
+          т.к. переключение по entity-ключу гарантирует совпадение CRUD-методов. */}
+      <CrudTable config={config as never} />
     </>
   )
 }

@@ -19,9 +19,9 @@ const ALL_CK_CATEGORIES = [
 
 const schema = z.object({
   name: z.string().min(1, 'Название обязательно').max(255),
-  description: z.string().nullable().optional(),
+  description: z.string().nullable(),
   category: z.enum(ALL_CK_CATEGORIES),
-  credits: z.number().int().min(1).optional(),
+  credits: z.number().int().min(1),
   competency_ids: z.array(z.string()),
   prerequisite_ids: z.array(z.string()),
 })
