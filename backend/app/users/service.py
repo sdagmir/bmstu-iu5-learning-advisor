@@ -6,11 +6,14 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import selectinload
 
 from app.db.models import (
+    CareerGoal,
     CKCourse,
     Discipline,
     StudentCompletedCK,
     StudentGrade,
+    TechparkStatus,
     User,
+    WorkloadPref,
 )
 from app.exceptions import ConflictError, NotFoundError
 
@@ -29,11 +32,53 @@ _PROFILE_FIELD_LABELS: dict[str, str] = {
     "workload_pref": "Нагрузка",
 }
 
+# Русские лейблы значений enum'ов профиля — иначе в истории
+# светится «backend → cybersecurity» латиницей.
+_CAREER_GOAL_RU: dict[CareerGoal, str] = {
+    CareerGoal.ML: "ML / Data Science",
+    CareerGoal.BACKEND: "Бэкенд-разработка",
+    CareerGoal.FRONTEND: "Фронтенд-разработка",
+    CareerGoal.CYBERSECURITY: "Кибербезопасность",
+    CareerGoal.SYSTEM: "Системное программирование",
+    CareerGoal.DEVOPS: "DevOps / Инфраструктура",
+    CareerGoal.MOBILE: "Мобильная разработка",
+    CareerGoal.GAMEDEV: "Геймдев",
+    CareerGoal.QA: "QA / Тестирование",
+    CareerGoal.ANALYTICS: "Аналитика данных",
+    CareerGoal.UNDECIDED: "Не определена",
+}
+_TECHPARK_RU: dict[TechparkStatus, str] = {
+    TechparkStatus.NONE: "Не участвую",
+    TechparkStatus.BACKEND: "Бэкенд",
+    TechparkStatus.FRONTEND: "Фронтенд",
+    TechparkStatus.ML: "Машинное обучение",
+    TechparkStatus.MOBILE: "Мобильная разработка",
+}
+_WORKLOAD_RU: dict[WorkloadPref, str] = {
+    WorkloadPref.LIGHT: "Лёгкая",
+    WorkloadPref.NORMAL: "Обычная",
+    WorkloadPref.INTENSIVE: "Интенсивная",
+}
 
-def _fmt(value: Any) -> str:
-    """Форматирование значения профиля для summary (enum → его str-значение)."""
+
+def _fmt(field: str, value: Any) -> str:
+    """Форматирование значения профиля для summary — с русскими лейблами enum'ов.
+
+    Значение может прийти как сам enum (из user-orm) или как строка
+    (из Pydantic model_dump) — оба варианта обрабатываем единообразно
+    через конструктор enum'а.
+    """
     if value is None:
         return "—"
+    try:
+        if field == "career_goal":
+            return _CAREER_GOAL_RU[CareerGoal(value)]
+        if field == "technopark_status":
+            return _TECHPARK_RU[TechparkStatus(value)]
+        if field == "workload_pref":
+            return _WORKLOAD_RU[WorkloadPref(value)]
+    except (ValueError, KeyError):
+        pass
     if hasattr(value, "value"):
         return str(value.value)
     return str(value)
@@ -66,7 +111,7 @@ class UserService:
             old = getattr(user, field)
             if old != value:
                 label = _PROFILE_FIELD_LABELS.get(field, field)
-                changes.append(f"{label}: {_fmt(old)} → {_fmt(value)}")
+                changes.append(f"{label}: {_fmt(field, old)} → {_fmt(field, value)}")
 
         # 2. Если есть фактические изменения — снимаем snapshot до setattr.
         #    Так build_student_profile(user, db) соберёт старый профиль,
