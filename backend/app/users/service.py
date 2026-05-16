@@ -53,24 +53,41 @@ class UserService:
         """Обновление полей профиля (X1-X4).
 
         При фактическом изменении X1–X4 фиксирует snapshot рекомендаций в
-        `recommendation_history` (для ленты /history).
+        `recommendation_history` (для ленты /history). Snapshot снимается
+        ДО применения изменений — чтобы зафиксировать состояние «как было»;
+        текущее «как стало» всегда доступно на главной.
         """
         update_data = data.model_dump(exclude_unset=True)
 
+        # 1. Сначала считаем что изменится — без применения, чтобы user ещё
+        #    держал старые значения для снимка.
         changes: list[str] = []
         for field, value in update_data.items():
             old = getattr(user, field)
             if old != value:
                 label = _PROFILE_FIELD_LABELS.get(field, field)
                 changes.append(f"{label}: {_fmt(old)} → {_fmt(value)}")
-            setattr(user, field, value)
-        await db.flush()
 
+        # 2. Если есть фактические изменения — снимаем snapshot до setattr.
+        #    Так build_student_profile(user, db) соберёт старый профиль,
+        #    а capture_recommendation_snapshot запишет «вот что было».
+        #    Best-effort: при ошибке снимка PATCH профиля не должен падать.
         if changes:
-            # Локальный импорт — избегаем кругового импорта expert ↔ users
+            import logging
+
             from app.expert.service import capture_recommendation_snapshot
 
-            await capture_recommendation_snapshot(user, db, "; ".join(changes))
+            try:
+                await capture_recommendation_snapshot(user, db, "; ".join(changes))
+            except Exception:
+                logging.getLogger(__name__).exception(
+                    "Не удалось записать snapshot истории — PATCH профиля продолжается"
+                )
+
+        # 3. Теперь применяем изменения и сохраняем.
+        for field, value in update_data.items():
+            setattr(user, field, value)
+        await db.flush()
 
         return user
 
