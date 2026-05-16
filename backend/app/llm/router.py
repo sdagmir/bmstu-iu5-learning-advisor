@@ -28,8 +28,9 @@ async def send_message(
 
     started = time.monotonic()
     try:
+        # debug=True всегда — для /admin/traces; в response клиенту не уходит.
         result = await chat_service.process_message(
-            message=body.message, profile=profile, history=history
+            message=body.message, profile=profile, history=history, debug=True
         )
     except asyncio.CancelledError:
         # Клиент закрыл соединение — BackgroundTasks всё равно не выполнятся;
@@ -56,7 +57,7 @@ async def send_message(
         endpoint="message",
         request_message=body.message,
         response_text=result.reply,
-        debug=None,
+        debug=result.debug,
         latency_ms=latency_ms,
         status="ok",
     )
