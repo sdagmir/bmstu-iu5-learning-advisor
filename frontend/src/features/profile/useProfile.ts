@@ -33,6 +33,9 @@ export function useProfile() {
       // и визуальное мерцание. Кеш профиля просто инвалидируем для свежести.
       queryClient.invalidateQueries({ queryKey: ['user', 'me'] })
       queryClient.invalidateQueries({ queryKey: ['expert', 'my-recommendations'] })
+      // PATCH X1–X4 пишет новый snapshot в recommendation_history — без
+      // этой инвалидации /history показывает кеш staleTime=30s.
+      queryClient.invalidateQueries({ queryKey: ['expert', 'history'] })
     },
   })
 
