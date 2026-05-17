@@ -14,14 +14,26 @@ import { cn } from '@/lib/utils'
 
 /**
  * Reading-параграфы для тел рекомендации (reasoning / description курса).
- * Сплитим по `\n+` — бэкенд хранит описания курсов в БД с переносами строк,
- * без сплита всё превращается в монолитную «кашу». Между параграфами —
- * gap-base. Стиль абзаца: text-md, justify + hyphens-auto (для русского lang
- * браузер сам расставляет переносы — это убирает «рваный» правый край и
- * широкие пробелы между словами) + красная строка `indent-8` (2rem) —
- * академическое оформление, привычное для НИР-текстов.
+ * Сплитим по `\n+` — бэкенд хранит описания курсов с двойными переносами,
+ * без сплита всё превращается в монолитную «кашу».
+ *
+ * Два режима:
+ * - `lead` — вводный абзац (под title-блоком). Без indent, без justify:
+ *   на коротких текстах justify рисует «реки пробелов», а красная строка
+ *   после meta выглядит инородно.
+ * - `body` — длинный текст в секции (после h2). Justify + hyphens-auto
+ *   (браузер сам переносит русские слова при `<html lang="ru">`) + красная
+ *   строка `indent-8` (2rem) у каждого абзаца, включая первый.
  */
-function ProseBlock({ text, className }: { text: string; className?: string }) {
+function ProseBlock({
+  text,
+  className,
+  variant = 'body',
+}: {
+  text: string
+  className?: string
+  variant?: 'lead' | 'body'
+}) {
   const paragraphs = text
     .split(/\n+/)
     .map((p) => p.trim())
@@ -34,7 +46,10 @@ function ProseBlock({ text, className }: { text: string; className?: string }) {
       {paragraphs.map((p, i) => (
         <p
           key={i}
-          className="indent-8 hyphens-auto text-[length:var(--text-md)] leading-relaxed text-justify text-[color:var(--color-text)]"
+          className={cn(
+            'text-[length:var(--text-md)] leading-relaxed text-[color:var(--color-text)]',
+            variant === 'body' && 'indent-8 hyphens-auto text-justify',
+          )}
         >
           {p}
         </p>
@@ -115,6 +130,7 @@ export default function RecommendationDetailPage() {
                сохраняем согласованность. */}
             <ProseBlock
               text={rec.reasoning}
+              variant="lead"
               className="mt-[var(--space-xl)]"
             />
 
