@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { authApi } from './api'
 import { useAuthStore } from '@/stores/authStore'
+import { useRuleLockStore } from '@/stores/ruleLockStore'
 import { routes } from '@/constants/routes'
 import type { LoginRequest, RegisterRequest, TokenPair, UserMe } from '@/types/api'
 
@@ -92,13 +93,13 @@ export function useAuth() {
       }
     },
     onSettled: () => {
-      clear()
-      queryClient.clear()
-      // sessionStorage хранит историю чата (`chat.history`, `admin.debug-chat.*`)
-      // и sandbox-профили админки. Без очистки следующий юзер на той же машине
-      // увидит чат предыдущего — privacy-баг. На этом домене мы единственные
-      // кто кладёт что-то в sessionStorage, поэтому смело чистим целиком.
-      sessionStorage.clear()
+      // Полная очистка следов сессии — иначе следующий юзер на той же машине
+      // увидит данные предыдущего (privacy-баг). Чистим всё что переживает logout:
+      clear()                                  // auth store: токены + профиль
+      useRuleLockStore.getState().reset()      // in-memory store админки
+      useAuthStore.persist.clearStorage()      // удалить ключ 'la.auth' из localStorage
+      sessionStorage.clear()                   // chat.history, debug-chat, sandbox-state
+      queryClient.clear()                      // все серверные кеши TanStack Query
       navigate(routes.login, { replace: true })
     },
   })

@@ -4,6 +4,9 @@ import type { RuleEditingLockStatus } from '@/types/api'
 interface RuleLockState {
   status: RuleEditingLockStatus | null
   setStatus: (s: RuleEditingLockStatus | null) => void
+  /** Сброс до initial — вызывается в logout, иначе следующий админ на той
+   *  же машине видит status предыдущей сессии до прихода свежего refetch. */
+  reset: () => void
 }
 
 /**
@@ -17,4 +20,5 @@ interface RuleLockState {
 export const useRuleLockStore = create<RuleLockState>((set) => ({
   status: null,
   setStatus: (status) => set({ status }),
+  reset: () => set({ status: null }),
 }))
