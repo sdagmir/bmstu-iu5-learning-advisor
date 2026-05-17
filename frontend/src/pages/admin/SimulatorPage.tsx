@@ -28,7 +28,7 @@ const STUDENT_PLACEHOLDER = '__none__'
  * 3-колоночный layout:
  *  - Слева (320px): форма X1–X12 + dropdown пресетов
  *  - Центр (flex): рекомендации Y1–Y6 в admin-режиме
- *  - Справа (380px): trace всех 52 правил с fired/skipped
+ *  - Справа (380px): trace всех правил ЭС с fired/skipped
  *
  * Любое изменение поля → debounced (250ms) /expert/evaluate/debug → весь
  * экран пересчитывается. Это и есть «магия прозрачна» — каждая

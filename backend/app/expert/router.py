@@ -17,6 +17,17 @@ from app.users.profile_builder import build_student_profile
 router = APIRouter()
 
 
+@router.get("/rules-meta")
+async def rules_meta(user: CurrentUser) -> dict[str, int]:
+    """Метаданные ЭС для UI: текущее число активных опубликованных правил.
+
+    Используется на EmptyChat-экране и подобных местах, где не хочется
+    хардкодить «N правил» (число меняется при правке rules_data.py).
+    """
+    _ = user  # auth-gate; результат не зависит от пользователя
+    return {"count": expert_service.rule_count}
+
+
 @router.get("/my-recommendations", response_model=list[Recommendation])
 async def my_recommendations(user: CurrentUser, db: DbSession) -> list[Recommendation]:
     """Рекомендации для текущего пользователя (профиль вычисляется автоматически).

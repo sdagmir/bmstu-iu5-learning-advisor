@@ -103,7 +103,7 @@ export default function DashboardPage() {
               to={routes.admin.simulator}
               icon={<Flask size={18} weight="regular" />}
               title="Симулятор ЭС"
-              description="Прогон любого профиля X1–X12 с трейсом 52 правил"
+              description="Прогон любого профиля X1–X12 с трейсом всех правил"
             />
             <QuickLink
               to={routes.admin.traces}

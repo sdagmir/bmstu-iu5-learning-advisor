@@ -1,3 +1,5 @@
+import { useQuery } from '@tanstack/react-query'
+import { recommendationApi } from '@/features/recommendation/api'
 import { InputBar } from './InputBar'
 
 interface EmptyChatProps {
@@ -17,6 +19,15 @@ const SUGGESTIONS: string[] = [
  * никакого sticky-бара внизу страницы.
  */
 export function EmptyChat({ onSend, isPending }: EmptyChatProps) {
+  // Динамическое число правил из бэка — чтобы при правке rules_data.py
+  // не было устаревшего хардкода типа «52 правила».
+  const rulesMeta = useQuery({
+    queryKey: ['expert', 'rules-meta'] as const,
+    queryFn: recommendationApi.rulesMeta,
+    staleTime: 60 * 60 * 1000,
+  })
+  const rulesPhrase = rulesMeta.data ? `${rulesMeta.data.count} правил` : 'правила'
+
   return (
     <div className="flex w-full max-w-[640px] flex-col gap-[var(--space-xl)]">
       <div className="flex flex-col items-center gap-[var(--space-sm)] text-center">
@@ -24,7 +35,7 @@ export function EmptyChat({ onSend, isPending }: EmptyChatProps) {
           Спроси меня о траектории
         </h2>
         <p className="max-w-[480px] text-[length:var(--text-base)] leading-relaxed text-[color:var(--color-text-muted)]">
-          Я знаю твой профиль, учебный план ИУ5 и 52 правила экспертной системы. Могу предложить
+          Я знаю твой профиль, учебный план ИУ5 и {rulesPhrase} экспертной системы. Могу предложить
           курсы ЦК, трек Технопарка, темы курсовых.
         </p>
       </div>
