@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FloppyDisk, Eye, Trash, CircleNotch, EyeSlash } from '@phosphor-icons/react'
+import { FloppyDisk, Eye, Trash, CircleNotch, EyeSlash, Code, Sliders } from '@phosphor-icons/react'
+import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -18,6 +19,13 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { RuleStatusBadge } from './RuleStatusBadge'
 import { JsonField } from './JsonField'
 import { RecommendationBuilder } from './RecommendationBuilder'
+import { ConditionBuilder } from './ConditionBuilder'
+import {
+  jsonToTree,
+  newEmptyAllGroup,
+  treeToJson,
+  type GroupNode,
+} from './conditionTree'
 import {
   NEW_RULE_DEFAULTS,
   PRIORITY_LEVELS,
@@ -31,6 +39,29 @@ import {
 } from './schema'
 import { ALL_RULE_GROUPS, RULE_GROUP_LABELS } from '@/constants/enums'
 import type { Rule, RuleCreate, RuleUpdate } from '@/types/api'
+
+/**
+ * Парсит conditionJson и пытается превратить в дерево для builder'а.
+ * Возвращает {tree, fallback} — fallback=true если не получилось (lookup_*,
+ * unknown param, кривой JSON) → RuleForm включит JSON-режим.
+ */
+function deriveTree(
+  conditionJson: string,
+): { tree: GroupNode; fallback: false } | { tree: null; fallback: true } {
+  try {
+    const parsed = JSON.parse(conditionJson)
+    const node = jsonToTree(parsed)
+    if (!node) return { tree: null, fallback: true }
+    // Атом без group-обёртки — оборачиваем в all, чтобы builder всегда работал с группой
+    const tree: GroupNode =
+      node.kind === 'group'
+        ? node
+        : { kind: 'group', combinator: 'all', children: [node] }
+    return { tree, fallback: false }
+  } catch {
+    return { tree: null, fallback: true }
+  }
+}
 
 interface RuleFormProps {
   /** `null` — создание; объект — редактирование. */
@@ -100,15 +131,64 @@ export function RuleForm({
     mode: 'onBlur',
   })
 
-  // Перезагружаем форму при смене правила или при выходе из новосоздания.
+  // ── Condition builder mode ────────────────────────────────────────────
+  // simple — визуальный конструктор; json — fallback для экзотики (lookup_*).
+  // Source of truth — form.conditionJson (string). tree — derived view над ним.
+  const initialDerive = deriveTree(form.getValues('conditionJson'))
+  const [conditionMode, setConditionMode] = useState<'simple' | 'json'>(
+    initialDerive.fallback ? 'json' : 'simple',
+  )
+  const [tree, setTree] = useState<GroupNode>(
+    initialDerive.fallback ? newEmptyAllGroup() : initialDerive.tree,
+  )
+
+  // Перезагружаем форму + builder-tree при смене правила или выходе из new.
+  // setState внутри effect здесь — легитимная синхронизация state с props
+  // (правило в URL изменилось → нужно пересобрать форму).
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    if (isNew || !rule) {
-      form.reset({ ...NEW_RULE_DEFAULTS, number: nextNumber })
+    const defaults =
+      isNew || !rule
+        ? { ...NEW_RULE_DEFAULTS, number: nextNumber }
+        : ruleToValues(rule)
+    form.reset(defaults)
+    const derived = deriveTree(defaults.conditionJson)
+    if (derived.fallback) {
+      setTree(newEmptyAllGroup())
+      setConditionMode('json')
     } else {
-      form.reset(ruleToValues(rule))
+      setTree(derived.tree)
+      setConditionMode('simple')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rule?.id, isNew, nextNumber])
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Builder → form: при изменении дерева пишем сериализованный JSON в форму.
+  const handleTreeChange = (next: GroupNode) => {
+    setTree(next)
+    form.setValue('conditionJson', JSON.stringify(treeToJson(next), null, 2), {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+  }
+
+  // Toggle mode. simple→json — просто переключаем. json→simple — пробуем парсить.
+  const toggleConditionMode = () => {
+    if (conditionMode === 'simple') {
+      setConditionMode('json')
+      return
+    }
+    const derived = deriveTree(form.getValues('conditionJson'))
+    if (derived.fallback) {
+      toast.error(
+        'Условие содержит то, что конструктор пока не поддерживает (lookup_*, неизвестный параметр или невалидный JSON). Поправь JSON и попробуй снова.',
+      )
+      return
+    }
+    setTree(derived.tree)
+    setConditionMode('simple')
+  }
 
   const submit = (afterSave?: () => void) =>
     form.handleSubmit(async (values) => {
@@ -287,25 +367,75 @@ export function RuleForm({
             />
           </div>
 
-          <Controller
-            control={form.control}
-            name="conditionJson"
-            render={({ field }) => (
-              <JsonField
-                label="Условие (condition)"
-                hint="JSON: { all: [...] } / { any: [...] } / { param, op, value }"
-                rows={14}
+          {/* ── Условие ─────────────────────────────────────────────────
+             Два режима: конструктор (builder) и сырой JSON. Source of truth —
+             form.conditionJson. Builder синхронизирует tree → JSON на каждое
+             изменение; JSON ↔ builder — через toggle с попыткой парсинга. */}
+          <section className="flex flex-col gap-[var(--space-sm)]">
+            <header className="flex items-baseline justify-between gap-[var(--space-base)]">
+              <div className="flex items-baseline gap-[var(--space-xs)]">
+                <h3 className="font-serif text-[length:var(--text-sm)] font-semibold tracking-tight text-[color:var(--color-text)]">
+                  Условие
+                </h3>
+                <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-muted)]">
+                  когда это правило срабатывает
+                </span>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={toggleConditionMode}
                 disabled={!canEdit}
-                {...(errors.conditionJson?.message
-                  ? { error: errors.conditionJson.message }
-                  : {})}
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-                name={field.name}
+              >
+                {conditionMode === 'simple' ? (
+                  <>
+                    <Code size={12} weight="regular" />
+                    JSON-режим
+                  </>
+                ) : (
+                  <>
+                    <Sliders size={12} weight="regular" />
+                    Конструктор
+                  </>
+                )}
+              </Button>
+            </header>
+
+            {conditionMode === 'simple' ? (
+              <ConditionBuilder
+                value={tree}
+                onChange={handleTreeChange}
+                disabled={!canEdit}
+              />
+            ) : (
+              <Controller
+                control={form.control}
+                name="conditionJson"
+                render={({ field }) => (
+                  <JsonField
+                    label=""
+                    hint="JSON: { all: [...] } / { any: [...] } / { param, op, value }"
+                    rows={12}
+                    disabled={!canEdit}
+                    {...(errors.conditionJson?.message
+                      ? { error: errors.conditionJson.message }
+                      : {})}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                  />
+                )}
               />
             )}
-          />
+
+            {errors.conditionJson?.message && conditionMode === 'simple' && (
+              <span className="text-[length:var(--text-xs)] text-[color:var(--color-danger)]">
+                {errors.conditionJson.message}
+              </span>
+            )}
+          </section>
 
           <RecommendationBuilder form={form} disabled={!canEdit} />
 

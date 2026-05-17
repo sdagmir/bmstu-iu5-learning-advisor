@@ -124,8 +124,9 @@ export default function RulesPage() {
       />
 
       <div className="grid min-h-0 flex-1 grid-cols-[360px_minmax(0,1fr)_420px] overflow-hidden">
-        {/* Левая колонка — список правил */}
-        <aside className="overflow-hidden border-r border-[color:var(--color-border)]">
+        {/* Левая колонка — список правил. min-h-0 у grid-items обязателен:
+            без него intrinsic min-height: auto продавливает grid в overflow. */}
+        <aside className="min-h-0 overflow-hidden border-r border-[color:var(--color-border)]">
           <RuleList
             rules={rules}
             isLoading={list.isLoading}
@@ -137,7 +138,7 @@ export default function RulesPage() {
         </aside>
 
         {/* Центр — форма или плейсхолдер */}
-        <main className="overflow-hidden">
+        <main className="min-h-0 overflow-hidden">
           {selected || isNew ? (
             <RuleForm
               rule={selected}
@@ -167,7 +168,7 @@ export default function RulesPage() {
         </main>
 
         {/* Правая колонка — sandbox preview */}
-        <aside className="overflow-hidden border-l border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)]">
+        <aside className="min-h-0 overflow-hidden border-l border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)]">
           <SandboxPanel
             profile={sandboxProfile}
             onProfileChange={updateProfile}
