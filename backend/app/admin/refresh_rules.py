@@ -1,8 +1,10 @@
-"""Безопасное обновление поля recommendation у уже существующих правил.
+"""Безопасное обновление текстовых полей у уже существующих правил.
 
 В отличие от seed_rules — этот скрипт НЕ создаёт правила и НЕ перетирает
-condition/group/name/description/is_published/edit-locks. Меняется только
-JSON-поле recommendation (текст title/reasoning/priority/competency_gap).
+condition/group/is_published/edit-locks. Синкаются из rules_data.py:
+  - recommendation (title/reasoning/mappings/priority/competency_gap)
+  - name (краткое имя правила в админке)
+  - description (текстовое описание правила)
 
 Запуск на сервере:
     docker exec rs-ito-app python -m app.admin.refresh_rules
@@ -27,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 async def refresh_recommendations() -> tuple[int, int]:
-    """Обновить recommendation-поле у всех уже существующих правил.
+    """Обновить текстовые поля у всех уже существующих правил.
 
     Возвращает (обновлено, пропущено).
     """
@@ -37,6 +39,8 @@ async def refresh_recommendations() -> tuple[int, int]:
         for rule_data in get_all_rules():
             number = rule_data["number"]
             new_rec = rule_data["recommendation"]
+            new_name = rule_data["name"]
+            new_desc = rule_data.get("description", "")
 
             existing = await db.execute(select(Rule).where(Rule.number == number))
             rule = existing.scalar_one_or_none()
@@ -45,11 +49,21 @@ async def refresh_recommendations() -> tuple[int, int]:
                 skipped += 1
                 continue
 
-            # Обновляем только recommendation; остальные поля (is_published,
-            # condition, edit_lock_*) остаются нетронутыми.
-            rule.recommendation = new_rec
-            updated += 1
-            logger.info("R%d: recommendation обновлено", number)
+            # Синкаем текстовые поля; не трогаем is_published, condition,
+            # edit_lock_*, trigger_count — это runtime-состояние правила.
+            changed = []
+            if rule.recommendation != new_rec:
+                rule.recommendation = new_rec
+                changed.append("recommendation")
+            if rule.name != new_name:
+                rule.name = new_name
+                changed.append("name")
+            if rule.description != new_desc:
+                rule.description = new_desc
+                changed.append("description")
+            if changed:
+                updated += 1
+                logger.info("R%d: обновлено [%s]", number, ", ".join(changed))
 
         await db.commit()
 
