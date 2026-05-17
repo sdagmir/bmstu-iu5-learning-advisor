@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { Check, X, CaretDown } from '@phosphor-icons/react'
+import { Check, X } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import type { TraceEntry } from '@/types/api'
 
@@ -74,69 +73,44 @@ export function RulesTracePanel({
 }
 
 function RuleEntryRow({ entry }: { entry: TraceEntry }) {
-  const [expanded, setExpanded] = useState(false)
-  const canExpand = !entry.fired && entry.skipped_reason
-
+  // Раскрытие убрано: бэк отдаёт generic «Условие не выполнено» — это
+  // тавтология, не несёт смысла. Если в будущем reason станет осмысленным
+  // (типа «param=career_goal: ожидалось ml, получено backend») — вернуть.
   return (
-    <li className="border-b border-[color:var(--color-border)] last:border-b-0">
-      <button
-        type="button"
-        onClick={() => canExpand && setExpanded((e) => !e)}
+    <li className="flex items-center gap-[var(--space-sm)] border-b border-[color:var(--color-border)] py-[var(--space-xs)] pr-[var(--space-xs)] last:border-b-0">
+      {entry.fired ? (
+        <Check
+          size={12}
+          weight="bold"
+          className="shrink-0 text-[color:var(--color-success)]"
+        />
+      ) : (
+        <X
+          size={12}
+          weight="regular"
+          className="shrink-0 text-[color:var(--color-text-subtle)]"
+        />
+      )}
+      <span
         className={cn(
-          'flex w-full items-center gap-[var(--space-sm)] py-[var(--space-xs)] pr-[var(--space-xs)] text-left transition-colors',
-          canExpand && 'cursor-pointer hover:bg-[color:var(--color-surface-muted)]',
-          !canExpand && 'cursor-default',
+          'shrink-0 font-mono text-[length:var(--text-xs)] tabular-nums',
+          entry.fired
+            ? 'text-[color:var(--color-text)]'
+            : 'text-[color:var(--color-text-subtle)]',
         )}
       >
-        {entry.fired ? (
-          <Check
-            size={12}
-            weight="bold"
-            className="shrink-0 text-[color:var(--color-success)]"
-          />
-        ) : (
-          <X
-            size={12}
-            weight="regular"
-            className="shrink-0 text-[color:var(--color-text-subtle)]"
-          />
+        {entry.rule}
+      </span>
+      <span
+        className={cn(
+          'flex-1 truncate text-[length:var(--text-sm)]',
+          entry.fired
+            ? 'font-medium text-[color:var(--color-text)]'
+            : 'text-[color:var(--color-text-muted)]',
         )}
-        <span
-          className={cn(
-            'shrink-0 font-mono text-[length:var(--text-xs)] tabular-nums',
-            entry.fired
-              ? 'text-[color:var(--color-text)]'
-              : 'text-[color:var(--color-text-subtle)]',
-          )}
-        >
-          {entry.rule}
-        </span>
-        <span
-          className={cn(
-            'flex-1 truncate text-[length:var(--text-sm)]',
-            entry.fired
-              ? 'font-medium text-[color:var(--color-text)]'
-              : 'text-[color:var(--color-text-muted)]',
-          )}
-        >
-          {entry.name}
-        </span>
-        {canExpand && (
-          <CaretDown
-            size={10}
-            weight="bold"
-            className={cn(
-              'shrink-0 text-[color:var(--color-text-subtle)] transition-transform',
-              expanded && 'rotate-180',
-            )}
-          />
-        )}
-      </button>
-      {expanded && entry.skipped_reason && (
-        <div className="pb-[var(--space-sm)] pl-[calc(var(--space-sm)+12px+var(--space-sm)+40px)] text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
-          {entry.skipped_reason}
-        </div>
-      )}
+      >
+        {entry.name}
+      </span>
     </li>
   )
 }
