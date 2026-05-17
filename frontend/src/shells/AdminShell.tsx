@@ -33,7 +33,7 @@ const NAV_ITEMS = [
  */
 export function AdminShell() {
   return (
-    <div className="flex h-svh">
+    <div className="flex h-svh overflow-hidden">
       <aside className="flex w-[240px] shrink-0 flex-col overflow-y-auto border-r border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)] px-[var(--space-md)] py-[var(--space-xl)]">
         <div className="mb-[var(--space-xl)] flex flex-col gap-[var(--space-xs)] px-[var(--space-sm)]">
           <Logo />
@@ -77,7 +77,7 @@ export function AdminShell() {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-x-hidden overflow-y-auto">
+      <main className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
         <Outlet />
       </main>
     </div>

@@ -142,7 +142,7 @@ export function SandboxPanel({
         </Tooltip>
       </div>
 
-      <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-[var(--space-base)] py-[var(--space-base)]">
+      <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-[var(--space-base)] py-[var(--space-base)]">
         {!formCollapsed && (
           <div className="mb-[var(--space-lg)] flex flex-col gap-[var(--space-base)]">
             <div className="flex flex-col gap-[var(--space-xs)]">
