@@ -16,6 +16,9 @@ const FREED_LOCK: RuleEditingLockStatus = {
 }
 
 const LOCK_QUERY_KEY = ['admin', 'rules', 'lock'] as const
+/** Длительность лока на бэке. Используется для кэпа отображения — без него
+ *  clock drift (server впереди client на 1–3 сек) рисует «30:02» при заходе. */
+const LOCK_DURATION_S = 30 * 60
 /** Порог автопродления — лок продлевается когда осталось меньше этого. */
 const RENEW_THRESHOLD_S = 5 * 60
 /** Период повторных попыток продления. */
@@ -97,7 +100,10 @@ export function useRuleLock() {
   }, [status?.owned_by_me, status?.expires_at])
 
   const secondsLeft: number | null = status?.expires_at
-    ? Math.max(0, Math.floor((new Date(status.expires_at).getTime() - now) / 1000))
+    ? Math.min(
+        LOCK_DURATION_S,
+        Math.max(0, Math.floor((new Date(status.expires_at).getTime() - now) / 1000)),
+      )
     : null
 
   // ── Автопродление: <5 мин до истечения, не чаще раза в 30 сек ───────────
