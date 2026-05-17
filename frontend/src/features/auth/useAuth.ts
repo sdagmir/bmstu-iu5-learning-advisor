@@ -94,6 +94,11 @@ export function useAuth() {
     onSettled: () => {
       clear()
       queryClient.clear()
+      // sessionStorage хранит историю чата (`chat.history`, `admin.debug-chat.*`)
+      // и sandbox-профили админки. Без очистки следующий юзер на той же машине
+      // увидит чат предыдущего — privacy-баг. На этом домене мы единственные
+      // кто кладёт что-то в sessionStorage, поэтому смело чистим целиком.
+      sessionStorage.clear()
       navigate(routes.login, { replace: true })
     },
   })
