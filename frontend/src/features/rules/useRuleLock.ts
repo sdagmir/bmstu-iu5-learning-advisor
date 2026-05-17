@@ -4,6 +4,16 @@ import { toast } from 'sonner'
 import { rulesApi } from './api'
 import { useRuleLockStore } from '@/stores/ruleLockStore'
 import { useAuthStore } from '@/stores/authStore'
+import type { RuleEditingLockStatus } from '@/types/api'
+
+const FREED_LOCK: RuleEditingLockStatus = {
+  is_locked: false,
+  owned_by_me: false,
+  admin_id: null,
+  admin_email: null,
+  acquired_at: null,
+  expires_at: null,
+}
 
 const LOCK_QUERY_KEY = ['admin', 'rules', 'lock'] as const
 /** Порог автопродления — лок продлевается когда осталось меньше этого. */
@@ -58,7 +68,10 @@ export function useRuleLock() {
     mutationKey: ['admin', 'rules', 'lock', 'release'],
     mutationFn: rulesApi.lock.release,
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: LOCK_QUERY_KEY })
+      // Не делаем invalidate — refetch может прийти позже соседних мутаций
+      // (acquire) и затереть свежий статус устаревшим «свободно».
+      setStatus(FREED_LOCK)
+      queryClient.setQueryData(LOCK_QUERY_KEY, FREED_LOCK)
     },
   })
 
@@ -67,7 +80,8 @@ export function useRuleLock() {
     mutationFn: rulesApi.lock.forceRelease,
     onSuccess: () => {
       toast.success('Лок освобождён. Можно входить в редактор.')
-      void queryClient.invalidateQueries({ queryKey: LOCK_QUERY_KEY })
+      setStatus(FREED_LOCK)
+      queryClient.setQueryData(LOCK_QUERY_KEY, FREED_LOCK)
     },
     onError: () => {
       toast.error('Не удалось освободить лок')
