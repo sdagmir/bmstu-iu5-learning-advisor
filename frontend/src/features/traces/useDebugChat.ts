@@ -21,17 +21,22 @@ export function useDebugChat() {
 
   const mut = useMutation({
     mutationKey: ['admin', 'traces', 'debug-chat'],
-    mutationFn: (message: string) => tracesApi.sendDebug({ message, history }),
-    onSuccess: (resp, message) => {
+    mutationFn: ({ message, history: h }: { message: string; history: ChatHistoryItem[] }) =>
+      tracesApi.sendDebug({ message, history: h }),
+    onSuccess: (resp) => {
       setLastResponse(resp)
-      setHistory((prev) => [
-        ...prev,
-        { role: 'user', content: message },
-        { role: 'assistant', content: resp.reply },
-      ])
+      setHistory((prev) => [...prev, { role: 'assistant', content: resp.reply }])
     },
     onError: (err: Error) => toast.error(err.message || 'LLM-запрос не удался'),
   })
+
+  // Optimistic-push user-сообщения ДО отправки, чтобы оно появилось мгновенно.
+  // Бэку шлём `history` без только что добавленного — он ждёт его в `message`.
+  const send = (message: string) => {
+    const snapshot = history
+    setHistory((prev) => [...prev, { role: 'user', content: message }])
+    mut.mutate({ message, history: snapshot })
+  }
 
   const reset = () => {
     setHistory([])
@@ -43,7 +48,7 @@ export function useDebugChat() {
     history,
     lastResponse,
     isPending: mut.isPending,
-    send: mut.mutate,
+    send,
     reset,
   }
 }
