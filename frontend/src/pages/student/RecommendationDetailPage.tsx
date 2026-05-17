@@ -10,6 +10,38 @@ import {
   RECOMMENDATION_PRIORITY_LABELS,
 } from '@/constants/enums'
 import { routes } from '@/constants/routes'
+import { cn } from '@/lib/utils'
+
+/**
+ * Reading-параграфы для тел рекомендации (reasoning / description курса).
+ * Сплитим по `\n+` — бэкенд хранит описания курсов в БД с переносами строк,
+ * без сплита всё превращается в монолитную «кашу». Между параграфами —
+ * gap-base. Стиль абзаца: text-md, justify + hyphens-auto (для русского lang
+ * браузер сам расставляет переносы — это убирает «рваный» правый край и
+ * широкие пробелы между словами) + красная строка `indent-8` (2rem) —
+ * академическое оформление, привычное для НИР-текстов.
+ */
+function ProseBlock({ text, className }: { text: string; className?: string }) {
+  const paragraphs = text
+    .split(/\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+
+  if (paragraphs.length === 0) return null
+
+  return (
+    <div className={cn('flex flex-col gap-[var(--space-base)]', className)}>
+      {paragraphs.map((p, i) => (
+        <p
+          key={i}
+          className="indent-8 hyphens-auto text-[length:var(--text-md)] leading-relaxed text-justify text-[color:var(--color-text)]"
+        >
+          {p}
+        </p>
+      ))}
+    </div>
+  )
+}
 
 /**
  * Детальная страница рекомендации. Single-column max-w-[68ch], reading-формат.
@@ -57,57 +89,55 @@ export default function RecommendationDetailPage() {
             }
           />
         ) : (
-          <article className="flex flex-col gap-[var(--space-lg)]">
+          /* Reading-формат: kicker → title → meta → lead-абзац (reasoning) →
+             h2-секции с большим воздухом сверху → info-callout снизу.
+             Никаких ALL CAPS eyebrow — иерархия только через типографику и
+             пробелы, как в журнальной статье. */
+          <article className="flex flex-col">
+            {/* Kicker — категория · приоритет, тонкая мета над title */}
             <span className="text-[length:var(--text-sm)] text-[color:var(--color-text-subtle)]">
               {RECOMMENDATION_CATEGORY_LABELS[rec.category]} ·{' '}
               {RECOMMENDATION_PRIORITY_LABELS[rec.priority]}
             </span>
 
-            <h1 className="font-serif text-[length:var(--text-2xl)] font-semibold tracking-tight text-[color:var(--color-text)]">
+            <h1 className="mt-[var(--space-sm)] font-serif text-[length:var(--text-2xl)] font-semibold tracking-tight text-[color:var(--color-text)]">
               {rec.title}
             </h1>
 
-            {/* Meta-строка курса — повторяет карточку с главной, но полнее.
-                Показываем только когда linked_course пришёл (только category=ck_course
-                с совпавшим title). */}
             {rec.linked_course && (
-              <p className="text-[length:var(--text-sm)] tabular-nums text-[color:var(--color-text-muted)]">
+              <p className="mt-[var(--space-sm)] text-[length:var(--text-sm)] tabular-nums text-[color:var(--color-text-muted)]">
                 {rec.linked_course.credits} ЕЗ · программа ЦК
               </p>
             )}
 
-            {/* Обоснование — почему именно эта рекомендация студенту */}
-            <section className="flex flex-col gap-[var(--space-xs)]">
-              <h2 className="text-[length:var(--text-xs)] tracking-wider text-[color:var(--color-text-subtle)] uppercase">
-                Почему рекомендуем
-              </h2>
-              <p className="text-[length:var(--text-md)] leading-relaxed text-[color:var(--color-text)]">
-                {rec.reasoning}
-              </p>
-            </section>
+            {/* Lead — reasoning сразу под title-блоком, без eyebrow. На главной
+               этот же текст идёт под caption карточки — там тоже без подписи,
+               сохраняем согласованность. */}
+            <ProseBlock
+              text={rec.reasoning}
+              className="mt-[var(--space-xl)]"
+            />
 
-            {/* О программе — описание курса из БД. Только для category=ck_course
-                с непустым description. Здесь, в отличие от карточки, разворачиваем
-                сразу — деталка для того и нужна. */}
+            {/* О программе — нормальный h2 в serif, не uppercase. Воздух сверху
+               разделяет секции лучше, чем border-t. mt-2xl (не 3xl) — чтобы
+               на коротком reasoning не было визуальной дыры. */}
             {rec.linked_course?.description && (
-              <section className="flex flex-col gap-[var(--space-xs)] border-t border-[color:var(--color-border)] pt-[var(--space-base)]">
-                <h2 className="text-[length:var(--text-xs)] tracking-wider text-[color:var(--color-text-subtle)] uppercase">
+              <section className="mt-[var(--space-2xl)]">
+                <h2 className="font-serif text-[length:var(--text-lg)] font-semibold tracking-tight text-[color:var(--color-text)]">
                   О программе
                 </h2>
-                <p className="text-[length:var(--text-md)] leading-relaxed text-[color:var(--color-text)]">
-                  {rec.linked_course.description}
-                </p>
+                <ProseBlock
+                  text={rec.linked_course.description}
+                  className="mt-[var(--space-base)]"
+                />
               </section>
             )}
 
-            {/* Подсказка про карьерный gap — кликабельная, ведёт на /coverage,
-                чтобы студент увидел свой прогресс по компетенциям. UID не показываем —
-                это не для глаз пользователя. */}
+            {/* Callout — связь с целевым профилем. Не секция, а info-блок:
+               та же визуальная база, что у карточек на главной (bg-surface-muted
+               + border + radius), маленький приглушённый текст со ссылкой. */}
             {rec.competency_gap && (
-              <section className="flex flex-col gap-[var(--space-xs)] border-t border-[color:var(--color-border)] pt-[var(--space-base)]">
-                <h2 className="text-[length:var(--text-xs)] tracking-wider text-[color:var(--color-text-subtle)] uppercase">
-                  Закрывает пробел
-                </h2>
+              <aside className="mt-[var(--space-2xl)] rounded-[10px] border border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)] px-[var(--space-base)] py-[var(--space-base)]">
                 <p className="text-[length:var(--text-sm)] leading-relaxed text-[color:var(--color-text-muted)]">
                   Эта рекомендация закрывает компетенцию из твоего целевого
                   профиля. Полный список покрытия —{' '}
@@ -119,7 +149,7 @@ export default function RecommendationDetailPage() {
                   </Link>
                   .
                 </p>
-              </section>
+              </aside>
             )}
           </article>
         )}

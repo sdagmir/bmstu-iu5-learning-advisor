@@ -11,6 +11,42 @@ import { RecommendationCard } from '@/features/recommendation/RecommendationCard
 import { routes } from '@/constants/routes'
 import type { RecommendationPriority } from '@/types/api'
 
+/**
+ * CTA-карточка «спросить в чате» в самом низу списка рекомендаций.
+ *
+ * Визуально — равноправный участник потока (та же hover-механика, что у
+ * RecommendationCard), но с другим контентом и иконкой-маркером. Цель —
+ * предложить выход для случая «среди списка нет того, что нужно», не вынося
+ * это в отдельную плавающую кнопку или sticky-pill.
+ */
+function ChatCTACard() {
+  return (
+    <Link
+      to={routes.chat}
+      className="group flex items-center gap-[var(--space-base)] rounded-[10px] border border-transparent bg-[color:var(--color-surface-muted)] px-[var(--space-base)] py-[var(--space-base)] transition-colors hover:border-[color:var(--color-border)]"
+    >
+      <ChatCircle
+        size={20}
+        weight="regular"
+        className="shrink-0 text-[color:var(--color-text-muted)] transition-colors group-hover:text-[color:var(--color-primary)]"
+      />
+      <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
+        <span className="font-serif text-[length:var(--text-base)] font-semibold tracking-tight text-[color:var(--color-text)]">
+          Спросить в чате
+        </span>
+        <span className="text-[length:var(--text-sm)] text-[color:var(--color-text-muted)]">
+          Уточнить рекомендацию или разобрать вопрос отдельно
+        </span>
+      </div>
+      <ArrowRight
+        size={14}
+        weight="regular"
+        className="shrink-0 text-[color:var(--color-text-subtle)] transition-all group-hover:translate-x-0.5 group-hover:text-[color:var(--color-primary)]"
+      />
+    </Link>
+  )
+}
+
 const PRIORITY_ORDER: Record<RecommendationPriority, number> = {
   high: 0,
   medium: 1,
@@ -87,42 +123,39 @@ export default function HomePage() {
             }
           />
         ) : (
-          <>
-            <section className="mb-[var(--space-2xl)]">
-              <p className="mb-[var(--space-sm)] text-[length:var(--text-xs)] tracking-wider text-[color:var(--color-text-subtle)] uppercase">
-                Главное сейчас
-              </p>
-              <RecommendationCard
-                recommendation={topRec}
-                linkTo={routes.recommendation(topRec.rule_id)}
-              />
-            </section>
+          /* Единый поток: featured-карточка (визуально заявляет «главное»)
+             → компактный список остальных через divide-y → CTA-карточка в
+             чат. Никаких eyebrow-заголовков «Главное сейчас» / «Ещё»: они
+             дублировали приоритет, который и так виден в caption карточки. */
+          <section className="flex flex-col">
+            <RecommendationCard
+              recommendation={topRec}
+              linkTo={routes.recommendation(topRec.rule_id)}
+              featured
+            />
 
             {restRecs.length > 0 && (
-              <section className="mb-[var(--space-3xl)]">
-                <p className="mb-[var(--space-sm)] text-[length:var(--text-xs)] tracking-wider text-[color:var(--color-text-subtle)] uppercase">
-                  Ещё рекомендации
-                </p>
-                <div className="flex flex-col">
-                  {restRecs.map((rec) => (
-                    <RecommendationCard
-                      key={rec.rule_id}
-                      recommendation={rec}
-                      linkTo={routes.recommendation(rec.rule_id)}
-                    />
-                  ))}
-                </div>
-              </section>
+              <div className="mt-[var(--space-2xl)] flex flex-col gap-[var(--space-sm)]">
+                {restRecs.map((rec) => (
+                  <RecommendationCard
+                    key={rec.rule_id}
+                    recommendation={rec}
+                    linkTo={routes.recommendation(rec.rule_id)}
+                  />
+                ))}
+              </div>
             )}
 
-            <Button asChild variant="ghost" size="lg" className="text-[color:var(--color-primary)]">
-              <Link to={routes.chat}>
-                <ChatCircle size={16} weight="regular" />
-                Спросить в чате
-                <ArrowRight size={14} weight="regular" />
-              </Link>
-            </Button>
-          </>
+            <div
+              className={
+                restRecs.length > 0
+                  ? 'mt-[var(--space-lg)]'
+                  : 'mt-[var(--space-2xl)]'
+              }
+            >
+              <ChatCTACard />
+            </div>
+          </section>
         )}
       </div>
     </>

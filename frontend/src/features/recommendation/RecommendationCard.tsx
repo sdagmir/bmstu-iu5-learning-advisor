@@ -25,6 +25,12 @@ interface RecommendationCardProps {
   relatedCompetencies?: RelatedCompetency[]
   /** Если задан — title рендерится как ссылка на детальную страницу. */
   linkTo?: string
+  /**
+   * Top-карточка в списке. Получает тонкий border всей рамкой, увеличенный
+   * padding и полный reasoning без line-clamp. Так визуально заявляет
+   * «это главное» без отдельного eyebrow-заголовка над ней.
+   */
+  featured?: boolean
 }
 
 /**
@@ -45,6 +51,7 @@ export function RecommendationCard({
   onRuleClick,
   relatedCompetencies,
   linkTo,
+  featured = false,
 }: RecommendationCardProps) {
   const [expanded, setExpanded] = useState(false)
 
@@ -63,7 +70,14 @@ export function RecommendationCard({
       (relatedCompetencies !== undefined && relatedCompetencies.length > 0))
 
   return (
-    <article className="group flex flex-col gap-[var(--space-sm)] rounded-[6px] px-[var(--space-base)] py-[var(--space-base)] transition-colors hover:bg-[color:var(--color-surface-muted)]">
+    <article
+      className={cn(
+        'group flex flex-col gap-[var(--space-sm)] rounded-[10px] border bg-[color:var(--color-surface-muted)] transition-colors',
+        featured
+          ? 'border-[color:var(--color-border)] p-[var(--space-lg)] hover:border-[color:var(--color-border-strong)]'
+          : 'border-transparent px-[var(--space-base)] py-[var(--space-base)] hover:border-[color:var(--color-border)]',
+      )}
+    >
       {/* Caption: категория · приоритет (admin: + rule_id справа) */}
       <div className="flex items-center justify-between gap-[var(--space-base)] text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
         <span className="truncate">
@@ -82,7 +96,12 @@ export function RecommendationCard({
       </div>
 
       {/* Title (Link если задан linkTo) */}
-      <h3 className="font-serif text-[length:var(--text-lg)] font-semibold tracking-tight text-[color:var(--color-text)]">
+      <h3
+        className={cn(
+          'font-serif font-semibold tracking-tight text-[color:var(--color-text)]',
+          featured ? 'text-[length:var(--text-xl)]' : 'text-[length:var(--text-lg)]',
+        )}
+      >
         {linkTo ? (
           <Link
             to={linkTo}
@@ -104,11 +123,13 @@ export function RecommendationCard({
         </p>
       )}
 
-      {/* Reasoning snippet — line-clamp-2 в свёрнутом, full в раскрытом */}
+      {/* Reasoning snippet — line-clamp-2 в свёрнутом, full в раскрытом.
+         Featured-карточка всегда показывает reasoning целиком — это и есть
+         её визуальный «вес» по сравнению с компактными соседями. */}
       <p
         className={cn(
           'text-[length:var(--text-base)] leading-relaxed text-[color:var(--color-text-muted)]',
-          !expanded && 'line-clamp-2',
+          !expanded && !featured && 'line-clamp-2',
         )}
       >
         {recommendation.reasoning}
