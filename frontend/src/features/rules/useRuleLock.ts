@@ -43,11 +43,22 @@ export function useRuleLock() {
   const status = useRuleLockStore((s) => s.status)
   const setStatus = useRuleLockStore((s) => s.setStatus)
 
-  // Грузим статус один раз; обновляем кэш store вручную из onSuccess мутаций.
+  // Polling статуса: без него второй админ не видит когда первый освободил
+  // лок (или наоборот — что кто-то захватил свободный). Кадансы:
+  //   - чужой лок  → 5s  (быстро отреагировать на освобождение)
+  //   - свободен   → 30s (на случай если кто-то захватит — узнаем за 30s)
+  //   - мой        → off (acquire/release/auto-renew уже синкают локально)
   const statusQuery = useQuery({
     queryKey: LOCK_QUERY_KEY,
     queryFn: rulesApi.lock.status,
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchInterval: (query) => {
+      const s = query.state.data
+      if (!s) return false
+      if (s.owned_by_me) return false
+      if (s.is_locked) return 5_000
+      return 30_000
+    },
   })
 
   useEffect(() => {
