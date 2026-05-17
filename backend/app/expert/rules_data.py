@@ -34,12 +34,12 @@ _TP_MAP: dict[str, str | None] = {
 # короткая тема (для title) и развёрнутая формулировка (для reasoning).
 # Тема выбирается под пару (дисциплина × career_goal).
 #
-# R40  — Базы данных (сем. 4)
-# R53  — Архитектура АСОИУ ч.2 (сем. 3)
-# R54  — Системное программирование (сем. 4)
-# R55  — Вычислительные средства АСОИУ (сем. 5)
-# R56  — Сетевые технологии в АСОИУ (сем. 6)
-# R57  — Имитационное моделирование дискретных процессов (сем. 7)
+# R37  — Базы данных (сем. 4)
+# R50  — Архитектура АСОИУ ч.2 (сем. 3)
+# R51  — Системное программирование (сем. 4)
+# R52  — Вычислительные средства АСОИУ (сем. 5)
+# R53  — Сетевые технологии в АСОИУ (сем. 6)
+# R54  — Имитационное моделирование дискретных процессов (сем. 7)
 
 _DB_SHORT: dict[str, str] = {
     "ml": "feature store для версионируемых обучающих выборок",
@@ -1453,10 +1453,10 @@ def get_all_rules() -> list[dict[str, Any]]:
             },
         },
         {
-            "number": 51,
+            "number": 48,
             "group": "technopark",
             "name": "Технопарк: DevOps → бэкенд",
-            "description": "R51: X1=DevOps И X2∈[2..4] И X3=нет → ТП бэкенд",
+            "description": "R48: X1=DevOps И X2∈[2..4] И X3=нет → ТП бэкенд",
             "condition": {
                 "all": [
                     {"param": "career_goal", "op": "eq", "value": "devops"},
@@ -1472,10 +1472,10 @@ def get_all_rules() -> list[dict[str, Any]]:
             },
         },
         {
-            "number": 52,
+            "number": 49,
             "group": "technopark",
             "name": "Технопарк: аналитика → ML",
-            "description": "R52: X1=аналитика И X2∈[2..4] И X3=нет → ТП ML",
+            "description": "R49: X1=аналитика И X2∈[2..4] И X3=нет → ТП ML",
             "condition": {
                 "all": [
                     {"param": "career_goal", "op": "eq", "value": "analytics"},
@@ -1490,16 +1490,16 @@ def get_all_rules() -> list[dict[str, Any]]:
                 "reasoning": "Текущий семестр оптимален для вступления в Технопарк. Поскольку отдельного направления аналитики в Технопарке нет, наиболее близким по профилю является направление «машинное обучение» — оно даёт базу по работе с данными, на которую в дальнейшем надстраиваются прикладные методы аналитики.",
             },
         },
-        # ── Группа 5: Курсовые работы (R40, R41, R53-R57) ──────────────────
+        # ── Группа 5: Курсовые работы (R37-R38, R50-R54) ──────────────────
         # По одному правилу на каждую дисциплину учебного плана ИУ5 с КуР:
         # дисциплина задаёт семестр и базовые компетенции, цель студента —
         # конкретный тематический фокус. Темы — в module-level таблицах
         # _DB_*, _ARCH_*, _SYSPROG_*, _HW_*, _NET_*, _SIM_* (см. начало файла).
         {
-            "number": 40,
+            "number": 37,
             "group": "coursework",
             "name": "Курсовая: Базы данных",
-            "description": "R40: X2=4 → Курсовая по «Базы данных» с фокусом под цель",
+            "description": "R37: X2=4 → Курсовая по «Базы данных» с фокусом под цель",
             "condition": {
                 "all": [
                     {"param": "semester", "op": "eq", "value": 4},
@@ -1525,10 +1525,10 @@ def get_all_rules() -> list[dict[str, Any]]:
             },
         },
         {
-            "number": 41,
+            "number": 38,
             "group": "coursework",
             "name": "Курсовая: диверсификация",
-            "description": "R41: X2=7 → Смежная область для портфолио",
+            "description": "R38: X2=7 → Смежная область для портфолио",
             "condition": {
                 "all": [
                     {"param": "semester", "op": "eq", "value": 7},
@@ -1543,10 +1543,10 @@ def get_all_rules() -> list[dict[str, Any]]:
         },
         # ── Группа 6: Предупреждения (R42-R46) ─────────────────────────────
         {
-            "number": 42,
+            "number": 39,
             "group": "warnings",
             "name": "Предупреждение: математика для ML",
-            "description": "R42: X1=ML И X9=да",
+            "description": "R39: X1=ML И X9=да",
             "condition": {
                 "all": [
                     {"param": "career_goal", "op": "eq", "value": "ml"},
@@ -1562,10 +1562,10 @@ def get_all_rules() -> list[dict[str, Any]]:
             },
         },
         {
-            "number": 43,
+            "number": 40,
             "group": "warnings",
             "name": "Предупреждение: математика для аналитики",
-            "description": "R43: X1=аналитика И X9=да",
+            "description": "R40: X1=аналитика И X9=да",
             "condition": {
                 "all": [
                     {"param": "career_goal", "op": "eq", "value": "analytics"},
@@ -1581,10 +1581,10 @@ def get_all_rules() -> list[dict[str, Any]]:
             },
         },
         {
-            "number": 44,
+            "number": 41,
             "group": "warnings",
             "name": "Предупреждение: программирование",
-            "description": "R44: X1∈{ML,бэкенд,DevOps} И X10=да",
+            "description": "R41: X1∈{ML,бэкенд,DevOps} И X10=да",
             "condition": {
                 "all": [
                     {"param": "career_goal", "op": "in", "value": ["ml", "backend", "devops"]},
@@ -1600,10 +1600,10 @@ def get_all_rules() -> list[dict[str, Any]]:
             },
         },
         {
-            "number": 45,
+            "number": 42,
             "group": "warnings",
             "name": "Предупреждение: нагрузка ТП",
-            "description": "R45: X4=лёгкая И X3≠нет",
+            "description": "R42: X4=лёгкая И X3≠нет",
             "condition": {
                 "all": [
                     {"param": "workload_pref", "op": "eq", "value": "light"},
@@ -1618,10 +1618,10 @@ def get_all_rules() -> list[dict[str, Any]]:
             },
         },
         {
-            "number": 46,
+            "number": 43,
             "group": "warnings",
             "name": "Предупреждение: интенсив на ранних",
-            "description": "R46: X4=интенсивная И X2∈{1,2}",
+            "description": "R43: X4=интенсивная И X2∈{1,2}",
             "condition": {
                 "all": [
                     {"param": "workload_pref", "op": "eq", "value": "intensive"},
@@ -1637,10 +1637,10 @@ def get_all_rules() -> list[dict[str, Any]]:
         },
         # ── Группа 7: Стратегия (R47-R50) ──────────────────────────────────
         {
-            "number": 47,
+            "number": 44,
             "group": "strategy",
             "name": "Стратегия: ранний семестр",
-            "description": "R47: X2∈{1,2}",
+            "description": "R44: X2∈{1,2}",
             "condition": {
                 "all": [
                     {"param": "semester", "op": "in", "value": [1, 2]},
@@ -1654,10 +1654,10 @@ def get_all_rules() -> list[dict[str, Any]]:
             },
         },
         {
-            "number": 48,
+            "number": 45,
             "group": "strategy",
             "name": "Стратегия: мало времени, низкое покрытие",
-            "description": "R48: X2≥6 И X11=низкое",
+            "description": "R45: X2≥6 И X11=низкое",
             "condition": {
                 "all": [
                     {"param": "semester", "op": "gte", "value": 6},
@@ -1672,10 +1672,10 @@ def get_all_rules() -> list[dict[str, Any]]:
             },
         },
         {
-            "number": 49,
+            "number": 46,
             "group": "strategy",
             "name": "Стратегия: высокое покрытие",
-            "description": "R49: X11=высокое",
+            "description": "R46: X11=высокое",
             "condition": {
                 "all": [
                     {"param": "coverage", "op": "eq", "value": "high"},
@@ -1689,10 +1689,10 @@ def get_all_rules() -> list[dict[str, Any]]:
             },
         },
         {
-            "number": 50,
+            "number": 47,
             "group": "strategy",
             "name": "Стратегия: синергия",
-            "description": "R50: X3 совпадает с оптимальным для X1",
+            "description": "R47: X3 совпадает с оптимальным для X1",
             "condition": {
                 "all": [
                     {"param": "technopark_status", "op": "neq", "value": "none"},
@@ -1712,13 +1712,13 @@ def get_all_rules() -> list[dict[str, Any]]:
                 "reasoning": "Сочетание направления Технопарка, программ цифровой кафедры и заявленной карьерной цели в одном направлении формирует максимально согласованную образовательную траекторию. Такая комбинация даёт синергический эффект — компетенции, полученные в разных форматах обучения, взаимно усиливают друг друга.",
             },
         },
-        # ── Группа 5 (продолжение): курсовые работы R53-R57 ─────────────────
-        # См. также R40, R41 выше (заметка перед группой 5).
+        # ── Группа 5 (продолжение): курсовые работы R50-R54 ─────────────────
+        # См. также R37, R38 выше (заметка перед группой 5).
         {
-            "number": 53,
+            "number": 50,
             "group": "coursework",
             "name": "Курсовая: Архитектура АСОИУ (ч.2)",
-            "description": "R53: X2=3 → Курсовая по «Архитектура АСОИУ (ч.2)» с фокусом под цель",
+            "description": "R50: X2=3 → Курсовая по «Архитектура АСОИУ (ч.2)» с фокусом под цель",
             "condition": {
                 "all": [
                     {"param": "semester", "op": "eq", "value": 3},
@@ -1744,10 +1744,10 @@ def get_all_rules() -> list[dict[str, Any]]:
             },
         },
         {
-            "number": 54,
+            "number": 51,
             "group": "coursework",
             "name": "Курсовая: Системное программирование",
-            "description": "R54: X2=4 → Курсовая по «Системное программирование» с фокусом под цель",
+            "description": "R51: X2=4 → Курсовая по «Системное программирование» с фокусом под цель",
             "condition": {
                 "all": [
                     {"param": "semester", "op": "eq", "value": 4},
@@ -1773,10 +1773,10 @@ def get_all_rules() -> list[dict[str, Any]]:
             },
         },
         {
-            "number": 55,
+            "number": 52,
             "group": "coursework",
             "name": "Курсовая: Вычислительные средства АСОИУ",
-            "description": "R55: X2=5 → Курсовая по «Вычислительные средства АСОИУ» с фокусом под цель",
+            "description": "R52: X2=5 → Курсовая по «Вычислительные средства АСОИУ» с фокусом под цель",
             "condition": {
                 "all": [
                     {"param": "semester", "op": "eq", "value": 5},
@@ -1802,10 +1802,10 @@ def get_all_rules() -> list[dict[str, Any]]:
             },
         },
         {
-            "number": 56,
+            "number": 53,
             "group": "coursework",
             "name": "Курсовая: Сетевые технологии в АСОИУ",
-            "description": "R56: X2=6 → Курсовая по «Сетевые технологии в АСОИУ» с фокусом под цель",
+            "description": "R53: X2=6 → Курсовая по «Сетевые технологии в АСОИУ» с фокусом под цель",
             "condition": {
                 "all": [
                     {"param": "semester", "op": "eq", "value": 6},
@@ -1831,10 +1831,10 @@ def get_all_rules() -> list[dict[str, Any]]:
             },
         },
         {
-            "number": 57,
+            "number": 54,
             "group": "coursework",
             "name": "Курсовая: Имитационное моделирование",
-            "description": "R57: X2=7 → Курсовая по «Имитационное моделирование» с фокусом под цель",
+            "description": "R54: X2=7 → Курсовая по «Имитационное моделирование» с фокусом под цель",
             "condition": {
                 "all": [
                     {"param": "semester", "op": "eq", "value": 7},
