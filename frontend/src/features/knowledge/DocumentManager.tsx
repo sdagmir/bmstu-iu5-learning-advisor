@@ -98,7 +98,7 @@ export function DocumentManager() {
           isLoading={docs.isLoading}
           isError={docs.isError}
           onAskDelete={setPendingDelete}
-          deletingSource={remove.isPending ? pendingDelete : null}
+          deletingSource={remove.isPending ? remove.variables ?? null : null}
         />
       </div>
 
@@ -188,9 +188,11 @@ export function DocumentManager() {
         loading={remove.isPending}
         onConfirm={() => {
           if (!pendingDelete) return
-          remove.mutate(pendingDelete, {
-            onSettled: () => setPendingDelete(null),
-          })
+          // Диалог закрываем сразу, а индикатор удаления привязан к
+          // mutation.variables — спиннер будет на нужном ряду до setQueryData.
+          const source = pendingDelete
+          setPendingDelete(null)
+          remove.mutate(source)
         }}
       />
     </section>

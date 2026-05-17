@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { knowledgeApi } from './api'
 import type {
   RagDocumentChunk,
+  RagDocumentSummary,
   RagDocumentUpload,
   RagSearchRequest,
 } from '@/types/api'
@@ -55,8 +56,12 @@ export function useRagDelete() {
     mutationFn: (source: string) => knowledgeApi.delete(source),
     onSuccess: (_, source) => {
       toast.success(`Документ «${source}» удалён`)
+      // Убираем из списка сразу — иначе пока refetch в полёте, ряд виден
+      // без спиннера и юзер может кликнуть Delete второй раз.
+      queryClient.setQueryData<RagDocumentSummary[]>(DOCS_KEY, (old) =>
+        old ? old.filter((d) => d.source !== source) : old,
+      )
       void queryClient.invalidateQueries({ queryKey: STATS_KEY })
-      void queryClient.invalidateQueries({ queryKey: DOCS_KEY })
     },
     onError: (err: Error) => toast.error(err.message || 'Не удалось удалить документ'),
   })
