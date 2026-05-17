@@ -21,14 +21,22 @@ export function useRules() {
     staleTime: 30_000,
   })
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: RULES_KEY })
+  // Точечный апдейт кеша списком — без invalidate, чтобы форма не мерцала
+  // на refetch (RuleForm reset завязан на rule из этого кеша).
+  const upsertInList = (item: Rule) => {
+    queryClient.setQueryData<Rule[]>(RULES_KEY, (old) =>
+      old ? old.map((r) => (r.id === item.id ? item : r)) : [item],
+    )
+  }
 
   const create = useMutation<Rule, Error, RuleCreate>({
     mutationKey: ['admin', 'rules', 'create'],
     mutationFn: rulesApi.create,
     onSuccess: (item) => {
       toast.success(`Правило R-${item.number} создано`)
-      void invalidate()
+      queryClient.setQueryData<Rule[]>(RULES_KEY, (old) =>
+        old ? [...old, item] : [item],
+      )
     },
     onError: (err) => toast.error(err.message || 'Не удалось создать правило'),
   })
@@ -38,7 +46,7 @@ export function useRules() {
     mutationFn: ({ id, body }) => rulesApi.update(id, body),
     onSuccess: (item) => {
       toast.success(`R-${item.number} сохранено`)
-      void invalidate()
+      upsertInList(item)
     },
     onError: (err) => toast.error(err.message || 'Не удалось сохранить правило'),
   })
@@ -46,9 +54,11 @@ export function useRules() {
   const remove = useMutation<void, Error, string>({
     mutationKey: ['admin', 'rules', 'delete'],
     mutationFn: rulesApi.delete,
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       toast.success('Правило удалено')
-      void invalidate()
+      queryClient.setQueryData<Rule[]>(RULES_KEY, (old) =>
+        old ? old.filter((r) => r.id !== id) : old,
+      )
     },
     onError: (err) => toast.error(err.message || 'Не удалось удалить правило'),
   })
@@ -58,7 +68,7 @@ export function useRules() {
     mutationFn: rulesApi.publish,
     onSuccess: (item) => {
       toast.success(`R-${item.number} опубликовано`)
-      void invalidate()
+      upsertInList(item)
     },
     onError: (err) => toast.error(err.message || 'Не удалось опубликовать'),
   })
@@ -68,7 +78,7 @@ export function useRules() {
     mutationFn: rulesApi.unpublish,
     onSuccess: (item) => {
       toast.success(`R-${item.number} снято с публикации`)
-      void invalidate()
+      upsertInList(item)
     },
     onError: (err) => toast.error(err.message || 'Не удалось снять с публикации'),
   })

@@ -11,7 +11,7 @@ import { RuleForm } from '@/features/rules/RuleForm'
 import { SandboxPanel } from '@/features/rules/SandboxPanel'
 import { PRESETS } from '@/features/simulator/presets'
 import { usePersistentState } from '@/hooks/usePersistentState'
-import type { RuleUpdate, SimulatorProfile } from '@/types/api'
+import type { RuleCreate, RuleUpdate, SimulatorProfile } from '@/types/api'
 
 const SELECTION_NEW = '__new__'
 
@@ -79,8 +79,13 @@ export default function RulesPage() {
     previewMut.mutate({ profile: sandboxProfile, include_drafts: includeDrafts })
   }
 
+  // mutateAsync — RuleForm ждёт коммита перед запуском preview, иначе
+  // sandbox прогоняет старую версию правила (race save+preview).
+  // mutateAsync — RuleForm ждёт коммита перед запуском preview, иначе
+  // sandbox прогоняет старую версию правила (race save+preview).
   const handleSaveUpdate = (id: string, body: RuleUpdate) =>
-    update.mutate({ id, body })
+    update.mutateAsync({ id, body })
+  const handleSaveCreate = (body: RuleCreate) => create.mutateAsync(body)
 
   // После создания — переключаемся на новое правило по id из ответа.
   const createReset = create.reset
@@ -142,7 +147,7 @@ export default function RulesPage() {
               isPublishing={publish.isPending || unpublish.isPending}
               isDeleting={remove.isPending}
               nextNumber={nextNumber}
-              onSaveCreate={create.mutate}
+              onSaveCreate={handleSaveCreate}
               onSaveUpdate={handleSaveUpdate}
               onPublishToggle={(id, currentlyPublished) => {
                 if (currentlyPublished) unpublish.mutate(id)

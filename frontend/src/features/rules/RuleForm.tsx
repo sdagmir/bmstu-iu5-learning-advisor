@@ -37,8 +37,9 @@ interface RuleFormProps {
   isDeleting: boolean
   /** Дефолт для номера при создании — `max(existing.number) + 1`. */
   nextNumber: number
-  onSaveCreate: (body: RuleCreate) => void
-  onSaveUpdate: (id: string, body: RuleUpdate) => void
+  /** Возвращают Promise — submit ждёт коммита перед afterSave. */
+  onSaveCreate: (body: RuleCreate) => Promise<unknown>
+  onSaveUpdate: (id: string, body: RuleUpdate) => Promise<unknown>
   onPublishToggle: (id: string, currentlyPublished: boolean) => void
   onDelete: (id: string) => void
   /** Колбек после успешного сохранения — RulesPage запускает sandbox preview. */
@@ -103,12 +104,21 @@ export function RuleForm({
   }, [rule?.id, isNew, nextNumber])
 
   const submit = (afterSave?: () => void) =>
-    form.handleSubmit((values) => {
+    form.handleSubmit(async (values) => {
+      let condition: Record<string, unknown>
+      let recommendation: Record<string, unknown>
       try {
-        const condition = parseJsonObject(values.conditionJson)
-        const recommendation = parseJsonObject(values.recommendationJson)
+        condition = parseJsonObject(values.conditionJson)
+        recommendation = parseJsonObject(values.recommendationJson)
+      } catch (e) {
+        form.setError('conditionJson', {
+          message: 'JSON не парсится: ' + (e as Error).message,
+        })
+        return
+      }
+      try {
         if (isNew || !rule) {
-          onSaveCreate({
+          await onSaveCreate({
             number: values.number,
             group: values.group,
             name: values.name,
@@ -119,7 +129,7 @@ export function RuleForm({
             is_active: values.is_active,
           })
         } else {
-          onSaveUpdate(rule.id, {
+          await onSaveUpdate(rule.id, {
             group: values.group,
             name: values.name,
             description: values.description,
@@ -130,10 +140,8 @@ export function RuleForm({
           })
         }
         afterSave?.()
-      } catch (e) {
-        form.setError('conditionJson', {
-          message: 'JSON не парсится: ' + (e as Error).message,
-        })
+      } catch {
+        // toast.error уже показал useRules.onError; preview не запускаем.
       }
     })
 
