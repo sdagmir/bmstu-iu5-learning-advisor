@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { CircleNotch, Lightning } from '@phosphor-icons/react'
 import { PageTopBar } from '@/components/common/PageTopBar'
 import {
@@ -13,9 +16,11 @@ import { RulesTracePanel } from '@/features/simulator/RulesTracePanel'
 import { useSimulator } from '@/features/simulator/useSimulator'
 import { PRESETS } from '@/features/simulator/presets'
 import { useRules } from '@/features/rules/useRules'
+import { adminCatalogApi } from '@/features/catalog/adminApi'
 import { usePersistentState } from '@/hooks/usePersistentState'
 
 const PLACEHOLDER_PRESET = '__custom__'
+const STUDENT_PLACEHOLDER = '__none__'
 
 /**
  * Симулятор ЭС — admin-only «лаборатория» правил для демо защиты.
@@ -40,19 +45,56 @@ export default function SimulatorPage() {
   const { list: rulesQuery } = useRules()
   const rules = rulesQuery.data
 
+  // Список студентов для «Загрузить из студента» — фильтруем только role=student,
+  // чтобы админы не попадали в выпадайку (своими профилями ЭС не оперирует).
+  // Тот же queryKey, что в SandboxPanel — кэш TanStack шарится между экранами.
+  const usersQuery = useQuery({
+    queryKey: ['admin', 'users', 'sandbox'],
+    queryFn: adminCatalogApi.users.list,
+    staleTime: 60_000,
+  })
+  const students = (usersQuery.data ?? []).filter((u) => u.role === 'student')
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
+  const [loadingStudentId, setLoadingStudentId] = useState<string | null>(null)
+
   const onPresetChange = (id: string) => {
     if (id === PLACEHOLDER_PRESET) return
     const preset = PRESETS.find((p) => p.id === id)
     if (!preset) return
     setActivePresetId(id)
+    setSelectedStudentId(null)
     replace(preset.profile)
   }
 
-  // Если поля менялись вручную после загрузки пресета — снимаем active.
+  const onStudentSelect = async (id: string) => {
+    if (id === STUDENT_PLACEHOLDER) return
+    setLoadingStudentId(id)
+    try {
+      const snapshot = await adminCatalogApi.users.profileSnapshot(id)
+      replace(snapshot)
+      setActivePresetId(PLACEHOLDER_PRESET)
+      setSelectedStudentId(id)
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Не удалось загрузить профиль студента',
+      )
+    } finally {
+      setLoadingStudentId(null)
+    }
+  }
+
+  // Если поля менялись вручную после загрузки пресета или студента — снимаем active.
   const onFieldChange = (patch: Parameters<typeof update>[0]) => {
     setActivePresetId(PLACEHOLDER_PRESET)
+    setSelectedStudentId(null)
     update(patch)
   }
+
+  const selectedStudentEmail = selectedStudentId
+    ? students.find((s) => s.id === selectedStudentId)?.email ?? null
+    : null
 
   const recommendations = result?.recommendations ?? []
   const trace = result?.trace ?? null
@@ -72,27 +114,75 @@ export default function SimulatorPage() {
         }
       />
       <div className="grid min-h-0 flex-1 grid-cols-[320px_1fr_380px] overflow-hidden">
-        {/* Левая колонка: форма + пресеты */}
+        {/* Левая колонка: форма + пресеты + загрузка студента */}
         <aside className="flex flex-col gap-[var(--space-lg)] overflow-y-auto border-r border-[color:var(--color-border)] px-[var(--space-base)] py-[var(--space-lg)]">
-          <div className="flex flex-col gap-[var(--space-xs)]">
-            <span className="text-[length:var(--text-xs)] tracking-wider text-[color:var(--color-text-subtle)] uppercase">
-              Пресет
-            </span>
-            <Select value={activePresetId} onValueChange={onPresetChange}>
-              <SelectTrigger size="sm" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {activePresetId === PLACEHOLDER_PRESET && (
-                  <SelectItem value={PLACEHOLDER_PRESET}>Кастомный профиль</SelectItem>
-                )}
-                {PRESETS.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col gap-[var(--space-base)]">
+            <div className="flex flex-col gap-[var(--space-xs)]">
+              <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
+                Пресет профиля
+              </span>
+              <Select value={activePresetId} onValueChange={onPresetChange}>
+                <SelectTrigger size="sm" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {activePresetId === PLACEHOLDER_PRESET && (
+                    <SelectItem value={PLACEHOLDER_PRESET}>Кастомный профиль</SelectItem>
+                  )}
+                  {PRESETS.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-[var(--space-xs)]">
+              <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
+                Загрузить из студента
+              </span>
+              <Select
+                value={selectedStudentId ?? STUDENT_PLACEHOLDER}
+                onValueChange={onStudentSelect}
+                disabled={
+                  usersQuery.isLoading ||
+                  loadingStudentId !== null ||
+                  students.length === 0
+                }
+              >
+                <SelectTrigger size="sm" className="w-full">
+                  <SelectValue
+                    placeholder={
+                      usersQuery.isLoading
+                        ? 'Загружаем…'
+                        : students.length === 0
+                          ? 'Нет студентов в БД'
+                          : 'Выбрать студента по email…'
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {students.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {loadingStudentId ? (
+                <span className="flex items-center gap-[var(--space-xs)] text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
+                  <CircleNotch size={12} className="animate-spin" /> Подтягиваем
+                  профиль…
+                </span>
+              ) : (
+                selectedStudentEmail && (
+                  <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
+                    Профиль загружен из {selectedStudentEmail}
+                  </span>
+                )
+              )}
+            </div>
           </div>
           <ProfileInputForm profile={profile} onChange={onFieldChange} />
         </aside>
