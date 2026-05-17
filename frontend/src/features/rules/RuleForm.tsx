@@ -17,9 +17,14 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { RuleStatusBadge } from './RuleStatusBadge'
 import { JsonField } from './JsonField'
+import { RecommendationBuilder } from './RecommendationBuilder'
 import {
   NEW_RULE_DEFAULTS,
+  PRIORITY_LEVELS,
+  buildRecommendation,
   parseJsonObject,
+  parseRecommendation,
+  priorityToBucket,
   ruleFormSchema,
   stringifyJson,
   type RuleFormValues,
@@ -54,8 +59,10 @@ function ruleToValues(rule: Rule): RuleFormValues {
     name: rule.name,
     description: rule.description,
     conditionJson: stringifyJson(rule.condition),
-    recommendationJson: stringifyJson(rule.recommendation),
-    priority: rule.priority,
+    recommendation: parseRecommendation(rule.recommendation),
+    // Legacy: в БД priority — произвольный int, округляем к ближайшему bucket
+    // из 5 уровней. Раньше все правила имели priority=0 → станут «Минимальный».
+    priority: priorityToBucket(rule.priority),
     is_active: rule.is_active,
   }
 }
@@ -106,16 +113,15 @@ export function RuleForm({
   const submit = (afterSave?: () => void) =>
     form.handleSubmit(async (values) => {
       let condition: Record<string, unknown>
-      let recommendation: Record<string, unknown>
       try {
         condition = parseJsonObject(values.conditionJson)
-        recommendation = parseJsonObject(values.recommendationJson)
       } catch (e) {
         form.setError('conditionJson', {
           message: 'JSON не парсится: ' + (e as Error).message,
         })
         return
       }
+      const recommendation = buildRecommendation(values.recommendation)
       try {
         if (isNew || !rule) {
           await onSaveCreate({
@@ -168,7 +174,7 @@ export function RuleForm({
     <form
       onSubmit={(e) => e.preventDefault()}
       onKeyDown={onKeyDown}
-      className="flex h-full flex-col"
+      className="flex h-full min-h-0 flex-col"
     >
       {/* ── Шапка ─────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-[var(--space-base)] border-b border-[color:var(--color-border)] bg-[color:var(--color-bg)] px-[var(--space-2xl)] py-[var(--space-md)]">
@@ -198,8 +204,11 @@ export function RuleForm({
         )}
       </div>
 
-      {/* ── Скроллируемое тело ────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto px-[var(--space-2xl)] py-[var(--space-lg)]">
+      {/* ── Скроллируемое тело ──────────────────────────────────────────
+         min-h-0 ОБЯЗАТЕЛЕН: без него flex-1 не ужимается ниже intrinsic
+         content и body «продавливает» admin-shell main, появляется window
+         scrollbar и sticky-chrome (sidebar / lock-header) уезжает вверх. */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-[var(--space-2xl)] py-[var(--space-lg)]">
         <div className="flex max-w-[760px] flex-col gap-[var(--space-lg)]">
           {/* Number + Group — только при создании (бэк не разрешает менять
               key после создания, оставляем поля только в new-mode) */}
@@ -261,10 +270,18 @@ export function RuleForm({
           </div>
 
           <div className="flex flex-col gap-[var(--space-xs)]">
-            <Label className="text-[length:var(--text-sm)]">Описание</Label>
+            <div className="flex items-baseline justify-between gap-[var(--space-base)]">
+              <Label className="text-[length:var(--text-sm)]">
+                Заметка для редактора
+              </Label>
+              <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-muted)]">
+                опционально · студент это не видит
+              </span>
+            </div>
             <textarea
               rows={2}
               disabled={!canEdit}
+              placeholder="Например: подсказка для старших семестров с уже выбранной целью"
               {...form.register('description')}
               className="w-full resize-y rounded-[6px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-[var(--space-md)] py-[var(--space-sm)] text-[length:var(--text-sm)] leading-relaxed text-[color:var(--color-text)] outline-none focus-visible:border-[color:var(--color-primary)] focus-visible:ring-[3px] focus-visible:ring-[color:var(--color-primary-soft)] disabled:cursor-not-allowed disabled:opacity-60"
             />
@@ -290,37 +307,44 @@ export function RuleForm({
             )}
           />
 
-          <Controller
-            control={form.control}
-            name="recommendationJson"
-            render={({ field }) => (
-              <JsonField
-                label="Шаблон рекомендации (recommendation)"
-                hint="category, title, priority, reasoning + категорийные поля"
-                rows={10}
-                disabled={!canEdit}
-                {...(errors.recommendationJson?.message
-                  ? { error: errors.recommendationJson.message }
-                  : {})}
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-                name={field.name}
-              />
-            )}
-          />
+          <RecommendationBuilder form={form} disabled={!canEdit} />
 
-          <div className="flex items-center gap-[var(--space-base)]">
-            <Label className="text-[length:var(--text-sm)]">Приоритет</Label>
-            <Input
-              type="number"
-              disabled={!canEdit}
-              className="w-24"
-              {...form.register('priority', { valueAsNumber: true })}
+          <div className="flex flex-col gap-[var(--space-xs)]">
+            <div className="flex items-baseline justify-between gap-[var(--space-base)]">
+              <Label className="text-[length:var(--text-sm)]">
+                Приоритет правила
+              </Label>
+              <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-muted)]">
+                порядок в выводе Y1–Y6, если сработали несколько правил сразу
+              </span>
+            </div>
+            <Controller
+              control={form.control}
+              name="priority"
+              render={({ field }) => (
+                <Select
+                  value={String(field.value)}
+                  onValueChange={(v) => field.onChange(Number(v))}
+                  disabled={!canEdit}
+                >
+                  <SelectTrigger size="sm" className="w-[260px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRIORITY_LEVELS.map((l) => (
+                      <SelectItem key={l.value} value={String(l.value)}>
+                        <span className="flex items-baseline gap-[var(--space-sm)]">
+                          <span>{l.label}</span>
+                          <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
+                            {l.hint}
+                          </span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             />
-            <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-muted)]">
-              чем больше, тем выше в списке Y1–Y6
-            </span>
           </div>
         </div>
       </div>

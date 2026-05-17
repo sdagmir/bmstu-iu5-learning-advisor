@@ -157,6 +157,16 @@
    Base layer
    ------------------------------------------------------------- */
 @layer base {
+  html,
+  body {
+    /* App-shell сам управляет скроллом (`<main>` внутри AdminShell/StudentShell
+       имеет overflow-y-auto). Если что-то выпирает за viewport — Radix-портал,
+       абсолютно позиционированный элемент, сломанная flex-цепочка — без этого
+       правила body начнёт скроллиться и chrome (sidebar, topbar) уедет вверх,
+       снизу появится белый фон. Эта строка — защитная сетка от такого. */
+    overflow: hidden;
+  }
+
   html {
     color-scheme: light;
   }
