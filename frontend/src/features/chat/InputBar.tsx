@@ -17,7 +17,7 @@ const MAX_HEIGHT = 240
  * дальше скроллится без видимого скроллбара. Полотно единое — без border-t
  * сверху, никаких визуальных швов.
  *
- * Hotkey ⌘/Ctrl+Enter — отправка. Plain Enter — перенос строки.
+ * Hotkey: Enter — отправка, Shift+Enter — перенос строки (Cmd/Ctrl+Enter тоже шлёт).
  */
 export function InputBar({ onSend, isPending }: InputBarProps) {
   const [text, setText] = useState('')
@@ -38,10 +38,11 @@ export function InputBar({ onSend, isPending }: InputBarProps) {
   }
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      e.preventDefault()
-      submit()
-    }
+    // Enter — отправка, Shift+Enter — перенос (стандарт чатов).
+    // IME composition (CJK ввод) — не перехватываем, иначе глотает иероглиф.
+    if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) return
+    e.preventDefault()
+    submit()
   }
 
   const canSend = text.trim().length > 0 && !isPending
@@ -88,7 +89,7 @@ export function InputBar({ onSend, isPending }: InputBarProps) {
               )}
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="top">Отправить · ⌘ Enter</TooltipContent>
+          <TooltipContent side="top">Отправить · Enter (Shift+Enter — новая строка)</TooltipContent>
         </Tooltip>
       </div>
     </form>

@@ -33,12 +33,12 @@ export function DebugChat({ history, isPending, onSend, onReset }: DebugChatProp
   }
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      e.preventDefault()
-      if (draft.trim() && !isPending) {
-        onSend(draft.trim())
-        setDraft('')
-      }
+    // Enter — отправка, Shift+Enter — перенос. IME-композицию не глотаем.
+    if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) return
+    e.preventDefault()
+    if (draft.trim() && !isPending) {
+      onSend(draft.trim())
+      setDraft('')
     }
   }
 
@@ -139,7 +139,7 @@ export function DebugChat({ history, isPending, onSend, onReset }: DebugChatProp
           </Button>
         </div>
         <p className="mt-[var(--space-xs)] text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
-          ⌘↵ — отправить · Запрос идёт от твоего admin-профиля; X1–X12 берутся из БД
+          Enter — отправить · Shift+Enter — новая строка · X1–X12 берутся из БД
         </p>
       </form>
     </div>
