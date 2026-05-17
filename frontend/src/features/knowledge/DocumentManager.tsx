@@ -238,8 +238,10 @@ function DocumentList({
     )
   }
 
+  // max-h + overflow-y-auto: при сотне документов список не разорвёт карточку
+  // и не выкинет страничный скролл (~12 строк помещается до скролла).
   return (
-    <ul className="flex flex-col">
+    <ul className="flex max-h-[480px] flex-col overflow-y-auto">
       {docs.map((d) => (
         <li
           key={d.source}
