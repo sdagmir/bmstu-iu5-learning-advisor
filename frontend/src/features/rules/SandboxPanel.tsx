@@ -244,8 +244,8 @@ export function SandboxPanel({
               Только опубликованные
             </Button>
           </div>
-          <p className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
-            preview не влияет на студентов и не требует захвата лока
+          <p className="text-[length:var(--text-xs)] text-[color:var(--color-text-muted)]">
+            Безопасный прогон: на студентов не влияет, вход в редактор не нужен.
           </p>
         </div>
 
@@ -299,9 +299,9 @@ export function SandboxPanel({
             </div>
           </div>
         ) : (
-          <p className="text-[length:var(--text-sm)] text-[color:var(--color-text-subtle)]">
-            Заполни профиль и нажми «Прогнать» — увидишь, какие правила
-            сработают и что выдаст ЭС.
+          <p className="text-[length:var(--text-sm)] text-[color:var(--color-text-muted)]">
+            Здесь появятся сработавшие правила и итоговые рекомендации для
+            заданного профиля.
           </p>
         )}
       </div>

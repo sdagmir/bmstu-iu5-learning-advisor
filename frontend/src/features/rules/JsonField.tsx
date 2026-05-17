@@ -24,7 +24,7 @@ export const JsonField = forwardRef<HTMLTextAreaElement, JsonFieldProps>(
         <div className="flex items-baseline justify-between gap-[var(--space-base)]">
           <Label className="text-[length:var(--text-sm)]">{label}</Label>
           {hint && (
-            <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
+            <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-muted)]">
               {hint}
             </span>
           )}

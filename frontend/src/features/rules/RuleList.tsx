@@ -78,9 +78,16 @@ export function RuleList({
     <div className="flex h-full flex-col">
       <div className="flex flex-col gap-[var(--space-sm)] border-b border-[color:var(--color-border)] px-[var(--space-base)] py-[var(--space-md)]">
         <div className="flex items-center justify-between gap-[var(--space-sm)]">
-          <span className="text-[length:var(--text-xs)] tracking-wider text-[color:var(--color-text-subtle)] uppercase">
-            Правила {rules ? `· ${rules.length}` : ''}
-          </span>
+          <div className="flex items-baseline gap-[var(--space-xs)]">
+            <span className="font-serif text-[length:var(--text-sm)] font-semibold tracking-tight text-[color:var(--color-text)]">
+              Правила
+            </span>
+            {rules && (
+              <span className="text-[length:var(--text-xs)] tabular-nums text-[color:var(--color-text-subtle)]">
+                {rules.length}
+              </span>
+            )}
+          </div>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -130,7 +137,7 @@ export function RuleList({
         {isLoading ? (
           <ListSkeleton />
         ) : visible.length === 0 ? (
-          <div className="px-[var(--space-base)] py-[var(--space-2xl)] text-center text-[length:var(--text-sm)] text-[color:var(--color-text-subtle)]">
+          <div className="px-[var(--space-base)] py-[var(--space-2xl)] text-center text-[length:var(--text-sm)] text-[color:var(--color-text-muted)]">
             {rules && rules.length === 0
               ? 'Пока нет правил. Создай первое.'
               : 'Ничего не нашлось'}

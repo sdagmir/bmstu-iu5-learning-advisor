@@ -213,7 +213,7 @@ export function RuleForm({
                 {...form.register('number', { valueAsNumber: true })}
               />
               {isNew && !errors.number && (
-                <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
+                <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-muted)]">
                   следующий свободный — можно изменить
                 </span>
               )}
@@ -318,7 +318,7 @@ export function RuleForm({
               className="w-24"
               {...form.register('priority', { valueAsNumber: true })}
             />
-            <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
+            <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-muted)]">
               чем больше, тем выше в списке Y1–Y6
             </span>
           </div>
@@ -327,7 +327,7 @@ export function RuleForm({
 
       {/* ── Низ: действия ─────────────────────────────────────────────── */}
       <div className="flex items-center gap-[var(--space-sm)] border-t border-[color:var(--color-border)] bg-[color:var(--color-bg)] px-[var(--space-2xl)] py-[var(--space-md)]">
-        <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)]">
+        <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-muted)]">
           {dirty
             ? 'Несохранённые изменения · ⌘S — сохранить · ⌘↵ — сохранить + прогнать'
             : '⌘S — сохранить · ⌘↵ — сохранить и прогнать в sandbox'}
