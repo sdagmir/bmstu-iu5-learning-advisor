@@ -269,12 +269,6 @@ async def release_rules_lock(admin: CurrentAdmin, db: DbSession) -> None:
     await rule_lock_service.release(db, admin.id)
 
 
-@router.delete("/rules/lock/force", status_code=204)
-async def force_release_rules_lock(admin: CurrentAdmin, db: DbSession) -> None:
-    """Принудительно освободить чужой лок (например, забытый коллегой)."""
-    await rule_lock_service.force_release(db)
-
-
 # ── Правила ЭС: CRUD ────────────────────────────────────────────────────────
 
 

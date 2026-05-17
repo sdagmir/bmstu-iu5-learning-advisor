@@ -117,10 +117,8 @@ export default function RulesPage() {
         secondsLeft={lock.secondsLeft}
         isAcquiring={lock.isAcquiring}
         isReleasing={lock.isReleasing}
-        isForceReleasing={lock.isForceReleasing}
         onAcquire={() => lock.acquire()}
         onRelease={() => lock.release()}
-        onForceRelease={() => lock.forceRelease()}
       />
 
       <div className="grid min-h-0 flex-1 grid-cols-[360px_minmax(0,1fr)_420px] overflow-hidden">

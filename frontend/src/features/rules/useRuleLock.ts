@@ -78,19 +78,6 @@ export function useRuleLock() {
     },
   })
 
-  const forceReleaseMut = useMutation({
-    mutationKey: ['admin', 'rules', 'lock', 'force-release'],
-    mutationFn: rulesApi.lock.forceRelease,
-    onSuccess: () => {
-      toast.success('Лок освобождён. Можно входить в редактор.')
-      setStatus(FREED_LOCK)
-      queryClient.setQueryData(LOCK_QUERY_KEY, FREED_LOCK)
-    },
-    onError: () => {
-      toast.error('Не удалось освободить лок')
-    },
-  })
-
   // ── Тик 1Гц для пересчёта secondsLeft из expires_at ─────────────────────
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
@@ -160,8 +147,6 @@ export function useRuleLock() {
     isAcquiring: acquireMut.isPending,
     release: releaseMut.mutate,
     isReleasing: releaseMut.isPending,
-    forceRelease: forceReleaseMut.mutate,
-    isForceReleasing: forceReleaseMut.isPending,
     canEdit: status?.owned_by_me === true,
     isLockedByOther: status?.is_locked === true && status.owned_by_me === false,
   }

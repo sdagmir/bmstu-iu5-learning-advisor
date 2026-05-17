@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
@@ -18,6 +17,8 @@ from app.db.models import RuleEditingLock, User
 from app.exceptions import LockedError
 
 if TYPE_CHECKING:
+    import uuid
+
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -111,17 +112,6 @@ async def release(db: AsyncSession, admin_id: uuid.UUID) -> bool:
     """Освободить свой лок. Возвращает True, если что-то удалено."""
     lock = await _fetch_active(db)
     if lock is None or lock.admin_id != admin_id:
-        return False
-    await db.delete(lock)
-    await db.flush()
-    return True
-
-
-async def force_release(db: AsyncSession) -> bool:
-    """Принудительно освободить лок (например, забытый коллегой)."""
-    result = await db.execute(select(RuleEditingLock).where(RuleEditingLock.slot == _SLOT))
-    lock = result.scalar_one_or_none()
-    if lock is None:
         return False
     await db.delete(lock)
     await db.flush()

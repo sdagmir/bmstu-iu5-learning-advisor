@@ -34,6 +34,5 @@ export const rulesApi = {
     acquire: () =>
       apiFetch<RuleEditingLockStatus>('/admin/rules/lock', { method: 'POST' }),
     release: () => apiFetch<void>('/admin/rules/lock', { method: 'DELETE' }),
-    forceRelease: () => apiFetch<void>('/admin/rules/lock/force', { method: 'DELETE' }),
   },
 }

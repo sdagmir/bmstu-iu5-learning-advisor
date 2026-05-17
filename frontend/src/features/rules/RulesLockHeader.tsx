@@ -1,8 +1,6 @@
-import { useMemo, useState } from 'react'
-import { LockOpen, LockKey, Warning, CircleNotch } from '@phosphor-icons/react'
+import { useMemo } from 'react'
+import { LockOpen, LockKey, CircleNotch } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { cn } from '@/lib/utils'
 import type { RuleEditingLockStatus } from '@/types/api'
 
@@ -11,10 +9,8 @@ interface RulesLockHeaderProps {
   secondsLeft: number | null
   isAcquiring: boolean
   isReleasing: boolean
-  isForceReleasing: boolean
   onAcquire: () => void
   onRelease: () => void
-  onForceRelease: () => void
 }
 
 /** mm:ss из секунд. Используется только когда лок мой. */
@@ -39,20 +35,20 @@ function formatExpiresAt(iso: string | null): string {
  *  - `null` (загрузка) — спиннер, бездействие
  *  - свободно — primary CTA «Войти в редактор»
  *  - мой — таймер mm:ss (≤5 мин жёлтый + «автопродление…») + ghost «Выйти»
- *  - чужой — бейдж занятости + ghost «Принудительно освободить»
+ *  - чужой — бейдж занятости + подсказка «дождитесь освобождения»
+ *
+ * Принудительное освобождение чужого лока намеренно НЕ предоставляется:
+ * один админ не должен иметь технической возможности прервать работу
+ * другого. Если коллега забыл вкладку — лок отвалится сам по TTL.
  */
 export function RulesLockHeader({
   status,
   secondsLeft,
   isAcquiring,
   isReleasing,
-  isForceReleasing,
   onAcquire,
   onRelease,
-  onForceRelease,
 }: RulesLockHeaderProps) {
-  const [forceOpen, setForceOpen] = useState(false)
-
   const inWarn = useMemo(
     () => secondsLeft !== null && secondsLeft > 0 && secondsLeft < 300,
     [secondsLeft],
@@ -73,61 +69,30 @@ export function RulesLockHeader({
   // 4) лок чужой
   if (status.is_locked && !status.owned_by_me) {
     return (
-      <>
-        <Header>
-          <span className="flex min-w-0 items-center gap-[var(--space-sm)] text-[length:var(--text-sm)]">
-            <LockKey
-              size={16}
-              weight="regular"
-              className="text-[color:var(--color-warning)]"
-            />
-            <span className="truncate">
-              <span className="text-[color:var(--color-text)]">Редактирует</span>{' '}
-              <span className="font-medium text-[color:var(--color-text)]">
-                {status.admin_email ?? 'другой админ'}
-              </span>
-              {status.expires_at && (
-                <span className="text-[color:var(--color-text-muted)]">
-                  {' '}
-                  · до {formatExpiresAt(status.expires_at)}
-                </span>
-              )}
+      <Header>
+        <span className="flex min-w-0 items-center gap-[var(--space-sm)] text-[length:var(--text-sm)]">
+          <LockKey
+            size={16}
+            weight="regular"
+            className="text-[color:var(--color-warning)]"
+          />
+          <span className="truncate">
+            <span className="text-[color:var(--color-text)]">Редактирует</span>{' '}
+            <span className="font-medium text-[color:var(--color-text)]">
+              {status.admin_email ?? 'другой админ'}
             </span>
+            {status.expires_at && (
+              <span className="text-[color:var(--color-text-muted)]">
+                {' '}
+                · до {formatExpiresAt(status.expires_at)}
+              </span>
+            )}
           </span>
-          <div className="ml-auto flex items-center gap-[var(--space-sm)]">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setForceOpen(true)}
-                  disabled={isForceReleasing}
-                >
-                  <Warning size={14} weight="regular" />
-                  Принудительно освободить
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                Заберёт лок у текущего редактора. Его несохранённые правки могут
-                потеряться.
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </Header>
-        <ConfirmDialog
-          open={forceOpen}
-          onOpenChange={setForceOpen}
-          title="Освободить чужой лок?"
-          description={`Сейчас правила редактирует ${status.admin_email ?? 'другой админ'}. Если он не сохранит изменения, они будут потеряны.`}
-          confirmLabel="Освободить"
-          variant="danger"
-          loading={isForceReleasing}
-          onConfirm={() => {
-            onForceRelease()
-            setForceOpen(false)
-          }}
-        />
-      </>
+        </span>
+        <span className="ml-auto text-[length:var(--text-xs)] text-[color:var(--color-text-muted)]">
+          Лок отпускается автоматически после освобождения коллегой
+        </span>
+      </Header>
     )
   }
 
