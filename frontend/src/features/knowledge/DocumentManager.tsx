@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { useRagDelete, useRagDocuments, useRagUpload } from './useKnowledge'
+import { pluralize } from '@/lib/plural'
 import type { RagDocumentSummary } from '@/types/api'
 
 // Бэк не парсит бинарные форматы — только plain text. Большой текст всё равно
@@ -253,7 +254,7 @@ function DocumentList({
             </span>
             <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-subtle)] tabular-nums">
               {d.chunks_count}{' '}
-              {chunkLabel(d.chunks_count)}
+              {pluralize(d.chunks_count, 'чанк', 'чанка', 'чанков')}
               {d.indexed_at && ` · ${formatDate(d.indexed_at)}`}
             </span>
           </div>
@@ -279,14 +280,6 @@ function DocumentList({
       ))}
     </ul>
   )
-}
-
-function chunkLabel(n: number): string {
-  const mod10 = n % 10
-  const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return 'чанк'
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'чанка'
-  return 'чанков'
 }
 
 function formatDate(iso: string): string {

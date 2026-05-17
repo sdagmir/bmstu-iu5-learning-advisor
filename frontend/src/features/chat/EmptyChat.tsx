@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { recommendationApi } from '@/features/recommendation/api'
+import { pluralize } from '@/lib/plural'
 import { InputBar } from './InputBar'
 
 interface EmptyChatProps {
@@ -26,7 +27,9 @@ export function EmptyChat({ onSend, isPending }: EmptyChatProps) {
     queryFn: recommendationApi.rulesMeta,
     staleTime: 60 * 60 * 1000,
   })
-  const rulesPhrase = rulesMeta.data ? `${rulesMeta.data.count} правил` : 'правила'
+  const rulesPhrase = rulesMeta.data
+    ? `${rulesMeta.data.count} ${pluralize(rulesMeta.data.count, 'правило', 'правила', 'правил')}`
+    : 'правила'
 
   return (
     <div className="flex w-full max-w-[640px] flex-col gap-[var(--space-xl)]">
