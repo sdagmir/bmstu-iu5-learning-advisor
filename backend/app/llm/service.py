@@ -78,7 +78,7 @@ class ChatService:
         Args:
             message: текст сообщения
             profile: текущий профиль студента
-            history: последние 4-5 пар сообщений
+            history: вся история с фронта, обрежется до последних 20 сообщений (10 пар)
             debug: включить отладочную информацию (для админа)
         """
         debug_info = ChatDebugInfo() if debug else None
@@ -241,9 +241,11 @@ class ChatService:
             {"role": "system", "content": profile_context},
         ]
 
-        # Последние 4-5 пар из истории
+        # Последние 10 пар диалога (20 сообщений). Хватает чтобы LLM
+        # помнила контекст обсуждения курсовой/программы и продолжала
+        # разговор; больше — раздувает контекст и стоимость без пользы.
         if history:
-            for msg in history[-10:]:
+            for msg in history[-20:]:
                 messages.append({"role": msg["role"], "content": msg["content"]})
 
         messages.append({"role": "user", "content": message})
