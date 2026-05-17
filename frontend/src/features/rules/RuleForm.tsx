@@ -40,6 +40,12 @@ import {
 import { ALL_RULE_GROUPS, RULE_GROUP_LABELS } from '@/constants/enums'
 import type { Rule, RuleCreate, RuleUpdate } from '@/types/api'
 
+/** Определяем ОС один раз на загрузке модуля — для лейбла модификатора. */
+const IS_MAC =
+  typeof navigator !== 'undefined' &&
+  /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent)
+const MOD_LABEL = IS_MAC ? '⌘' : 'Ctrl'
+
 /**
  * Парсит conditionJson и пытается превратить в дерево для builder'а.
  * Возвращает {tree, fallback} — fallback=true если не получилось (lookup_*,
@@ -483,8 +489,8 @@ export function RuleForm({
       <div className="flex items-center gap-[var(--space-sm)] border-t border-[color:var(--color-border)] bg-[color:var(--color-bg)] px-[var(--space-2xl)] py-[var(--space-md)]">
         <span className="text-[length:var(--text-xs)] text-[color:var(--color-text-muted)]">
           {dirty
-            ? 'Несохранённые изменения · ⌘S — сохранить · ⌘↵ — сохранить + прогнать'
-            : '⌘S — сохранить · ⌘↵ — сохранить и прогнать в sandbox'}
+            ? `Несохранённые изменения · ${MOD_LABEL}+S — сохранить · ${MOD_LABEL}+Enter — сохранить + прогнать`
+            : `${MOD_LABEL}+S — сохранить · ${MOD_LABEL}+Enter — сохранить и прогнать в sandbox`}
         </span>
 
         <div className="ml-auto flex items-center gap-[var(--space-sm)]">
@@ -555,7 +561,7 @@ export function RuleForm({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              {canEdit ? '⌘S' : 'Сначала войди в редактор'}
+              {canEdit ? `${MOD_LABEL}+S` : 'Сначала войди в редактор'}
             </TooltipContent>
           </Tooltip>
         </div>
