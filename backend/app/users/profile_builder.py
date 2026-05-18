@@ -168,8 +168,11 @@ async def _compute_coverage(
     """Вычислить X11 — покрытие целевого профиля компетенций.
 
     Формула: (компетенции студента ∩ целевые) / целевые
-    Компетенции студента = из дисциплин до текущего семестра + из пройденных ЦК.
-    Дисциплины с оценкой ≤ 2 (неудовлетворительно) не считаются освоенными.
+    Компетенции студента = из дисциплин до текущего семестра (с положительной
+    оценкой ≥ 3) + из пройденных ЦК. Дисциплина без выставленной оценки
+    НЕ считается освоенной — иначе новый юзер без проставленных оценок
+    автоматически получает coverage=HIGH (баг: R46 срабатывает при нулевом
+    покрытии).
     """
     if career_goal == CareerGoal.UNDECIDED:
         return CoverageLevel.LOW
@@ -190,26 +193,28 @@ async def _compute_coverage(
 
     target_ids = {c.id for c in direction.competencies}
 
-    # Дисциплины с оценкой ≤ 2 — не считаем освоенными
+    # Дисциплины с положительной оценкой (≥ 3) — считаются освоенными.
+    # Отсутствие оценки = не освоено (нельзя считать что студент сдал
+    # дисциплину, по которой нет выставленной оценки).
     result = await db.execute(
         select(StudentGrade.discipline_id).where(
-            StudentGrade.user_id == user_id, StudentGrade.grade <= 2
+            StudentGrade.user_id == user_id, StudentGrade.grade >= 3
         )
     )
-    failed_discipline_ids = {row[0] for row in result.all()}
+    passed_discipline_ids = {row[0] for row in result.all()}
 
-    # Компетенции из дисциплин до текущего семестра (включительно)
+    # Компетенции из освоенных дисциплин до текущего семестра (включительно)
     student_comp_ids: set[uuid.UUID] = set()
 
-    result = await db.execute(
-        select(Discipline)
-        .options(selectinload(Discipline.competencies))
-        .where(Discipline.semester <= semester)
-    )
-    disciplines = list(result.scalars().unique().all())
+    if passed_discipline_ids:
+        result = await db.execute(
+            select(Discipline)
+            .options(selectinload(Discipline.competencies))
+            .where(Discipline.semester <= semester, Discipline.id.in_(passed_discipline_ids))
+        )
+        disciplines = list(result.scalars().unique().all())
 
-    for disc in disciplines:
-        if disc.id not in failed_discipline_ids:
+        for disc in disciplines:
             for comp in disc.competencies:
                 student_comp_ids.add(comp.id)
 
