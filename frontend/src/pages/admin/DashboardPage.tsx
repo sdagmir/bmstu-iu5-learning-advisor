@@ -108,7 +108,7 @@ export default function DashboardPage() {
             <QuickLink
               to={routes.admin.traces}
               icon={<ListMagnifyingGlass size={18} weight="regular" />}
-              title="Debug-чат LLM"
+              title="Отладочный чат LLM"
               description="Один запрос — видим rules_fired, rag_chunks, tool_calls, profile_changes"
             />
           </div>

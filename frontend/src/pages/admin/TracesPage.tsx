@@ -34,7 +34,7 @@ export default function TracesPage() {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <PageTopBar
-        title="Debug-чат LLM"
+        title="Отладочный чат LLM"
         icon={<ListMagnifyingGlass size={18} weight="regular" />}
       />
       <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_480px] overflow-hidden">

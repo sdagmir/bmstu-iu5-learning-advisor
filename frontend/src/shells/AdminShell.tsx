@@ -19,7 +19,7 @@ const NAV_ITEMS = [
   { to: routes.admin.root, label: 'Дашборд', icon: SquaresFour, end: true },
   { to: routes.admin.rules, label: 'Правила', icon: Scales, end: false },
   { to: routes.admin.simulator, label: 'Симулятор', icon: Flask, end: false },
-  { to: routes.admin.traces, label: 'Debug-чат', icon: ListMagnifyingGlass, end: false },
+  { to: routes.admin.traces, label: 'Отладочный чат', icon: ListMagnifyingGlass, end: false },
   { to: routes.admin.catalog('competencies'), label: 'Каталог', icon: Stack, end: false },
   { to: routes.admin.knowledge, label: 'База знаний', icon: BookOpen, end: false },
 ]

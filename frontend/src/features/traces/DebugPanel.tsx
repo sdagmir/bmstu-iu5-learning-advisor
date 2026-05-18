@@ -41,7 +41,7 @@ export function DebugPanel({ response, onRuleClick }: DebugPanelProps) {
   if (!debug) {
     return (
       <Empty
-        title="Без debug-инфы"
+        title="Без отладочной информации"
         description="LLM не вернула отладочные данные для этого запроса. Возможно, вызов прошёл без tool-call'ов."
       />
     )
