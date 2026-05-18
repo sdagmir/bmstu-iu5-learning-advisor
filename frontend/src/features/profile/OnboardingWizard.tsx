@@ -35,9 +35,8 @@ const TOTAL_FIELD_STEPS = 4
 export function OnboardingWizard() {
   const navigate = useNavigate()
   const { patchMe } = useProfile()
-  const [stepIdx, setStepIdx] = useState(0) // 0 = welcome, 1..4 = поля
 
-  // Lazy initializer — читаем профиль один раз при mount, без подписки.
+  // Lazy initializers — читаем профиль один раз при mount, без подписки.
   // Дальше wizard работает с локальным draft; обновления authStore не вызывают
   // re-render всего wizard'а.
   const [draft, setDraft] = useState<Draft>(() => {
@@ -48,6 +47,20 @@ export function OnboardingWizard() {
       technopark_status: u?.technopark_status ?? null,
       workload_pref: u?.workload_pref ?? null,
     }
+  })
+
+  // stepIdx: при первом заходе — welcome (0), при возврате с частично
+  // заполненным профилем — первый невыполненный шаг (1..4).
+  const [stepIdx, setStepIdx] = useState(() => {
+    const u = useAuthStore.getState().user
+    const hasAny = u?.career_goal != null || u?.semester != null
+      || u?.technopark_status != null || u?.workload_pref != null
+    if (!hasAny) return 0  // welcome
+    if (u?.career_goal == null) return 1
+    if (u?.semester == null) return 2
+    if (u?.technopark_status == null) return 3
+    if (u?.workload_pref == null) return 4
+    return 0
   })
   const [error, setError] = useState<string | null>(null)
 
