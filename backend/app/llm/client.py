@@ -76,6 +76,12 @@ class OpenRouterClient:
             "temperature": temperature if temperature is not None else settings.llm_temperature,
             "max_tokens": max_tokens or settings.llm_max_tokens,
         }
+        # OpenRouter fallback chain: при недоступности primary автоматически
+        # пробует следующую модель в списке. Снижает риск падения чата при
+        # region-locking конкретной модели или временных проблемах провайдера.
+        fallback = [m.strip() for m in settings.llm_fallback_models.split(",") if m.strip()]
+        if fallback:
+            payload["models"] = [self._model, *fallback]
         if tools:
             payload["tools"] = tools
             payload["tool_choice"] = "auto"

@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
     llm_base_url: str = "https://openrouter.ai/api/v1"
     llm_model: str = "google/gemini-2.5-flash"
+    # Fallback-модели OpenRouter (csv). Если основная упала / region-locked —
+    # OpenRouter автоматически прогоняет запрос через следующую в списке.
+    # z-ai/glm-4.6 — китайская LLM с function calling, страховка от amer-зоны.
+    llm_fallback_models: str = "z-ai/glm-4.6"
     llm_max_tokens: int = 4096
     llm_temperature: float = 0.3
 
