@@ -135,8 +135,8 @@ class ChatService:
         if fn_name == "get_recommendations":
             return await self._fn_get_recommendations(profile, debug_info)
 
-        if fn_name == "recalculate_with_changes":
-            return await self._fn_recalculate(profile, fn_args, debug_info)
+        if fn_name == "simulate_changes":
+            return await self._fn_simulate(profile, fn_args, debug_info)
 
         if fn_name == "search_knowledge":
             return await self._fn_search_knowledge(fn_args, debug_info)
@@ -159,13 +159,13 @@ class ChatService:
 
         return format_recommendations_for_llm([r.model_dump() for r in recs])
 
-    async def _fn_recalculate(
+    async def _fn_simulate(
         self,
         profile: StudentProfile,
         changes: dict[str, Any],
         debug_info: ChatDebugInfo | None,
     ) -> str:
-        """recalculate_with_changes: пересчёт с изменением параметров."""
+        """simulate_changes: what-if-пересчёт без записи в БД."""
         from app.expert.service import expert_service
 
         # Применяем изменения к копии профиля
@@ -193,7 +193,10 @@ class ChatService:
             recs = expert_service.get_recommendations(modified_profile)
 
         changes_text = ", ".join(f"{k}={v}" for k, v in applied.items())
-        header = f"Пересчёт с изменениями: {changes_text}\n\n"
+        header = (
+            f"Моделирование с изменениями (профиль в БД НЕ меняется): "
+            f"{changes_text}\n\n"
+        )
         return header + format_recommendations_for_llm([r.model_dump() for r in recs])
 
     async def _fn_search_knowledge(

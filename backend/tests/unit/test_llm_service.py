@@ -28,12 +28,12 @@ class TestPrompts:
     def test_tool_definitions_has_three_functions(self) -> None:
         assert len(TOOL_DEFINITIONS) == 3
         names = {t["function"]["name"] for t in TOOL_DEFINITIONS}
-        assert names == {"get_recommendations", "recalculate_with_changes", "search_knowledge"}
+        assert names == {"get_recommendations", "simulate_changes", "search_knowledge"}
 
     def test_recalculate_params_are_enums(self) -> None:
-        """recalculate_with_changes должен иметь enum для всех параметров."""
+        """simulate_changes должен иметь enum для всех параметров."""
         fn = next(
-            t for t in TOOL_DEFINITIONS if t["function"]["name"] == "recalculate_with_changes"
+            t for t in TOOL_DEFINITIONS if t["function"]["name"] == "simulate_changes"
         )
         props = fn["function"]["parameters"]["properties"]
         assert "enum" in props["career_goal"]
@@ -204,13 +204,13 @@ class TestChatService:
 
     @pytest.mark.asyncio
     async def test_recalculate_flow(self) -> None:
-        """LLM вызывает recalculate_with_changes с изменением цели."""
+        """LLM вызывает simulate_changes с изменением цели."""
         mock_client = AsyncMock()
         mock_client.chat = AsyncMock(
             side_effect=[
                 _make_llm_response(
                     tool_calls=[
-                        _make_tool_call("recalculate_with_changes", {"career_goal": "backend"})
+                        _make_tool_call("simulate_changes", {"career_goal": "backend"})
                     ]
                 ),
                 _make_llm_response("При смене на бэкенд рекомендую..."),
@@ -309,14 +309,14 @@ class TestChatService:
 
     @pytest.mark.asyncio
     async def test_recalculate_only_allowed_changes(self) -> None:
-        """Пересчёт игнорирует недопустимые параметры."""
+        """Моделирование игнорирует недопустимые параметры."""
         mock_client = AsyncMock()
         mock_client.chat = AsyncMock(
             side_effect=[
                 _make_llm_response(
                     tool_calls=[
                         _make_tool_call(
-                            "recalculate_with_changes",
+                            "simulate_changes",
                             {
                                 "career_goal": "backend",
                                 "semester": 8,  # недопустимо

@@ -250,7 +250,7 @@ class TestChatFlow:
         fake_llm: FakeLLMClient,
         db: AsyncSession,
     ) -> None:
-        """Сценарий 4: recalculate_with_changes — what-if, не меняет профиль в БД."""
+        """Сценарий 4: simulate_changes — what-if, не меняет профиль в БД."""
         auth = await _register(client, "chat2@example.com")
         headers = auth["headers"]
 
@@ -262,7 +262,7 @@ class TestChatFlow:
         )
 
         fake_llm.queue_tool_call(
-            "recalculate_with_changes", '{"career_goal": "backend"}'
+            "simulate_changes", '{"career_goal": "backend"}'
         )
         fake_llm.queue_text("для backend рекомендуем backend-трек Технопарка")
 

@@ -120,16 +120,16 @@ class TestChatMessage:
         content = tool_msgs[0]["content"]
         assert "Результаты поиска" in content or "ничего не найдено" in content
 
-    async def test_function_call_recalculate_with_changes(
+    async def test_function_call_simulate_changes(
         self,
         client: AsyncClient,
         student_auth: dict[str, str],
         fake_llm: FakeLLMClient,
         seeded: None,
     ) -> None:
-        """tool_call recalculate_with_changes → ЭС с изменённой целью."""
+        """tool_call simulate_changes → ЭС с изменённой целью."""
         fake_llm.queue_tool_call(
-            "recalculate_with_changes", '{"career_goal":"backend"}'
+            "simulate_changes", '{"career_goal":"backend"}'
         )
         fake_llm.queue_text("пересчитал для бэкенда")
 
