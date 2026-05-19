@@ -119,7 +119,7 @@ export function RecommendationCard({
           Сообщает студенту базовую конкретику: что за курс, ЕЗ. */}
       {recommendation.linked_course && (
         <p className="text-[length:var(--text-xs)] tabular-nums text-[color:var(--color-text-subtle)]">
-          {recommendation.linked_course.credits} ЕЗ · программа ЦК
+          {recommendation.linked_course.credits} ЕЗ · курс ЦК
         </p>
       )}
 

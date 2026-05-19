@@ -113,7 +113,7 @@ export const ALL_RULE_GROUPS: readonly RuleGroup[] = [
 ] as const
 
 export const RULE_GROUP_LABELS: Record<RuleGroup, string> = {
-  ck_programs: 'Программы ЦК',
+  ck_programs: 'Курсы ЦК',
   basic_universal: 'Базовые универсальные',
   technopark: 'Технопарк',
   discipline_focus: 'Фокус в дисциплине',

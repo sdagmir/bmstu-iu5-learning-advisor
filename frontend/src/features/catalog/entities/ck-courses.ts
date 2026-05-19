@@ -28,8 +28,8 @@ const schema = z.object({
 
 export const ckCoursesConfig: EntityConfig<AdminCKCourse, AdminCKCourseCreate> = {
   key: 'ck-courses',
-  singular: 'программу ЦК',
-  pluralName: 'Программы ЦК',
+  singular: 'курс ЦК',
+  pluralName: 'Курсы ЦК',
   list: adminCatalogApi.ckCourses.list,
   create: adminCatalogApi.ckCourses.create,
   update: adminCatalogApi.ckCourses.update,

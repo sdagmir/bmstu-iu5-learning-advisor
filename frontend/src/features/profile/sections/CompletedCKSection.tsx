@@ -35,9 +35,9 @@ export function CompletedCKSection() {
   return (
     <div className="flex flex-col gap-[var(--space-base)]">
       <div className="flex flex-col gap-[var(--space-xs)]">
-        <Label>Пройденные программы ЦК</Label>
+        <Label>Пройденные курсы ЦК</Label>
         <p className="text-[length:var(--text-sm)] text-[color:var(--color-text-muted)]">
-          Отметь программы цифровой кафедры, которые ты уже прошёл. Это влияет на то, какие новые
+          Отметь курсы цифровой кафедры, которые ты уже прошёл. Это влияет на то, какие новые
           ЦК-курсы система предложит.
         </p>
       </div>
@@ -46,7 +46,7 @@ export function CompletedCKSection() {
         <CKSkeleton />
       ) : grouped.length === 0 ? (
         <p className="text-[length:var(--text-sm)] text-[color:var(--color-text-subtle)]">
-          Каталог программ пока пуст.
+          Каталог курсов пока пуст.
         </p>
       ) : (
         <div className="flex flex-col gap-[var(--space-sm)]">

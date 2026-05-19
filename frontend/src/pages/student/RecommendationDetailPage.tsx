@@ -121,7 +121,7 @@ export default function RecommendationDetailPage() {
 
             {rec.linked_course && (
               <p className="mt-[var(--space-sm)] text-[length:var(--text-sm)] tabular-nums text-[color:var(--color-text-muted)]">
-                {rec.linked_course.credits} ЕЗ · программа ЦК
+                {rec.linked_course.credits} ЕЗ · курс ЦК
               </p>
             )}
 
@@ -140,7 +140,7 @@ export default function RecommendationDetailPage() {
             {rec.linked_course?.description && (
               <section className="mt-[var(--space-2xl)]">
                 <h2 className="font-serif text-[length:var(--text-lg)] font-semibold tracking-tight text-[color:var(--color-text)]">
-                  О программе
+                  О курсе
                 </h2>
                 <ProseBlock
                   text={rec.linked_course.description}
