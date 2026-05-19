@@ -66,10 +66,15 @@ class OpenRouterClient:
         messages: list[dict[str, Any]],
         *,
         tools: list[dict[str, Any]] | None = None,
+        tool_choice: str | dict[str, Any] | None = None,
         temperature: float | None = None,
         max_tokens: int | None = None,
     ) -> dict[str, Any]:
-        """Нестриминговый запрос к LLM с retry."""
+        """Нестриминговый запрос к LLM с retry.
+
+        tool_choice: "auto" (по умолчанию), "required" (заставить вызвать любой
+        тул) или {"type":"function","function":{"name":"..."}} (форсить конкретный).
+        """
         payload: dict[str, Any] = {
             "model": self._model,
             "messages": messages,
@@ -84,7 +89,7 @@ class OpenRouterClient:
             payload["models"] = [self._model, *fallback]
         if tools:
             payload["tools"] = tools
-            payload["tool_choice"] = "auto"
+            payload["tool_choice"] = tool_choice if tool_choice is not None else "auto"
 
         last_error: Exception | None = None
 

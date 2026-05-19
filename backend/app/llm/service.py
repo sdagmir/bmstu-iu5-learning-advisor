@@ -87,9 +87,17 @@ class ChatService:
         # Собираем сообщения для LLM
         messages = self._build_messages(message, profile_data, history)
 
-        # Цикл function calling (LLM может вызвать несколько функций)
-        for _ in range(MAX_TOOL_ROUNDS):
-            response = await self._llm.chat(messages, tools=TOOL_DEFINITIONS)
+        # Цикл function calling (LLM может вызвать несколько функций).
+        # Первый round — tool_choice=required: модель физически обязана
+        # вызвать какую-то функцию, а не отвечать «по памяти». Это убирает
+        # класс багов когда LLM выдумывает рекомендации, не сверяясь с ЭС.
+        # Последующие round'ы — auto, чтобы модель смогла сформировать
+        # финальный текст из tool-result'ов.
+        for round_idx in range(MAX_TOOL_ROUNDS):
+            tool_choice: str = "required" if round_idx == 0 else "auto"
+            response = await self._llm.chat(
+                messages, tools=TOOL_DEFINITIONS, tool_choice=tool_choice
+            )
             tool_calls = OpenRouterClient.extract_tool_calls(response)
 
             if not tool_calls:
