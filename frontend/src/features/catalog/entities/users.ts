@@ -5,6 +5,7 @@ import {
   CAREER_GOAL_LABELS,
   USER_ROLE_LABELS,
 } from '@/constants/enums'
+import { useAuthStore } from '@/stores/authStore'
 import type { EntityConfig } from '../EntityConfig'
 import type { AdminUser, AdminUserUpdate, UserRole } from '@/types/api'
 
@@ -65,4 +66,8 @@ export const usersConfig: EntityConfig<AdminUser, AdminUserUpdate> = {
   toFormValues: (row) => ({ role: row.role, is_active: row.is_active }),
   emptyFormValues: () => ({}),
   rowLabel: (row) => row.email,
+  // Админ не может менять собственную учётную запись — иначе можно случайно
+  // снять с себя роль или деактивировать себя. Бэкенд это тоже запрещает (403).
+  isRowReadOnly: (row) => row.id === useAuthStore.getState().user?.id,
+  readOnlyHint: 'Нельзя редактировать собственную учётную запись',
 }

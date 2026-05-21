@@ -42,6 +42,7 @@ from app.admin.service import (
     user_admin_service,
 )
 from app.dependencies import CurrentAdmin, DbSession, PageLimit, PageOffset
+from app.exceptions import ForbiddenError
 from app.expert.schemas import StudentProfile
 from app.expert.service import expert_service
 from app.users.profile_builder import build_student_profile
@@ -70,6 +71,10 @@ async def get_user(user_id: uuid.UUID, admin: CurrentAdmin, db: DbSession) -> Us
 async def update_user(
     user_id: uuid.UUID, body: UserAdminUpdate, admin: CurrentAdmin, db: DbSession
 ) -> UserAdminRead:
+    # Администратор не может менять собственную учётную запись — иначе можно
+    # случайно снять с себя роль или деактивировать себя и потерять доступ.
+    if user_id == admin.id:
+        raise ForbiddenError("Нельзя изменять собственную учётную запись")
     user = await user_admin_service.update(user_id, body, db)
     return UserAdminRead.model_validate(user)
 

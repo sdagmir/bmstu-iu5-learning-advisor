@@ -144,63 +144,79 @@ export function CrudTable<TRead extends { id: string }, TForm extends Record<str
           </div>
         ) : (
           <div className="divide-y divide-[color:var(--color-border)]">
-            {visibleRows.map((row) => (
-              <div
-                key={row.id}
-                className={cn(
-                  'grid items-center gap-[var(--space-base)] px-[var(--space-base)] py-[var(--space-sm)] text-[length:var(--text-sm)] transition-colors hover:bg-[color:var(--color-surface-muted)]',
-                )}
-                style={{ gridTemplateColumns: buildGridCols(config.columns, totalCols) }}
-              >
-                {config.columns.map((col) => (
-                  <div
-                    key={col.key}
-                    className={cn(
-                      'min-w-0 truncate',
-                      col.mono && 'font-mono tabular-nums text-[color:var(--color-text-muted)]',
-                    )}
-                  >
-                    {col.render ? col.render(row) : formatValue(row[col.key])}
-                  </div>
-                ))}
-                {(config.update || config.delete) && (
-                  <div className="flex justify-end gap-[var(--space-xs)]">
-                    {config.update && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => startEdit(row)}
-                            aria-label="Редактировать"
-                          >
-                            <PencilSimple size={14} />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Редактировать</TooltipContent>
-                      </Tooltip>
-                    )}
-                    {config.delete && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setConfirmRow(row)}
-                            aria-label="Удалить"
-                          >
-                            <Trash size={14} />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Удалить</TooltipContent>
-                      </Tooltip>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+            {visibleRows.map((row) => {
+              const readOnly = config.isRowReadOnly?.(row) ?? false
+              const readOnlyHint = config.readOnlyHint ?? 'Действие недоступно'
+              return (
+                <div
+                  key={row.id}
+                  className={cn(
+                    'grid items-center gap-[var(--space-base)] px-[var(--space-base)] py-[var(--space-sm)] text-[length:var(--text-sm)] transition-colors hover:bg-[color:var(--color-surface-muted)]',
+                  )}
+                  style={{ gridTemplateColumns: buildGridCols(config.columns, totalCols) }}
+                >
+                  {config.columns.map((col) => (
+                    <div
+                      key={col.key}
+                      className={cn(
+                        'min-w-0 truncate',
+                        col.mono && 'font-mono tabular-nums text-[color:var(--color-text-muted)]',
+                      )}
+                    >
+                      {col.render ? col.render(row) : formatValue(row[col.key])}
+                    </div>
+                  ))}
+                  {(config.update || config.delete) && (
+                    <div className="flex justify-end gap-[var(--space-xs)]">
+                      {config.update && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            {/* span-обёртка: disabled-кнопка не ловит события мыши,
+                                тултип вешается на обёртку, иначе не покажется */}
+                            <span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                disabled={readOnly}
+                                onClick={() => startEdit(row)}
+                                aria-label="Редактировать"
+                              >
+                                <PencilSimple size={14} />
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {readOnly ? readOnlyHint : 'Редактировать'}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {config.delete && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                disabled={readOnly}
+                                onClick={() => setConfirmRow(row)}
+                                aria-label="Удалить"
+                              >
+                                <Trash size={14} />
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {readOnly ? readOnlyHint : 'Удалить'}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

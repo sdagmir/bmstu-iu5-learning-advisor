@@ -71,4 +71,11 @@ export interface EntityConfig<TRead extends { id: string }, TForm> {
   emptyFormValues: () => TForm
   /** Уникальный ключ строки в текстах подтверждений (`Удалить «{name}»?`). */
   rowLabel: (row: TRead) => string
+  /**
+   * Если вернёт true — строку нельзя редактировать/удалять: кнопки действий
+   * становятся неактивными. Например, админ не может менять свою учётную запись.
+   */
+  isRowReadOnly?: (row: TRead) => boolean
+  /** Подсказка в тултипе для неактивной кнопки read-only строки. */
+  readOnlyHint?: string
 }
