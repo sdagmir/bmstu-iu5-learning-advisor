@@ -1,0 +1,482 @@
+[
+  {
+    "discipline": "Программирование на основе классов и шаблонов",
+    "career_direction": "ML / Data Science",
+    "focus_advice": "Pipeline и Strategy для ML-пайплайнов",
+    "reasoning": "Pipeline для построения цепочек обработки данных (как sklearn.Pipeline) и Strategy для подмены моделей под единым интерфейсом. Полезно также освоить Decorator — типовой способ навесить логирование и метрики на ML-компоненты без правки их кода."
+  },
+  {
+    "discipline": "Программирование на основе классов и шаблонов",
+    "career_direction": "Бэкенд-разработка",
+    "focus_advice": "SOLID, Repository, Factory, Observer",
+    "reasoning": "SOLID-принципы как фундамент проектирования + Repository для отделения хранилища от бизнес-логики + Factory для управления созданием объектов + Observer для событийных сценариев. Эти четыре темы — основа серверной разработки."
+  },
+  {
+    "discipline": "Программирование на основе классов и шаблонов",
+    "career_direction": "Фронтенд-разработка",
+    "focus_advice": "HOC, Render Props, Observer для state",
+    "reasoning": "HOC и Render Props для композиции компонентов в React-стиле и Observer как идейная база реактивных state-менеджеров (RxJS, MobX). Альтернатива — Command для undo/redo в редакторах и сложных UI."
+  },
+  {
+    "discipline": "Программирование на основе классов и шаблонов",
+    "career_direction": "Кибербезопасность",
+    "focus_advice": "Strategy для крипто-алгоритмов, Adapter для legacy-API",
+    "reasoning": "Strategy для подмены криптографических алгоритмов в одной кодовой базе и Adapter для интеграции с legacy-API без потери уровня безопасности. Также полезен Chain of Responsibility — каноничная архитектура для фильтров запросов и middleware-цепочек защиты."
+  },
+  {
+    "discipline": "Программирование на основе классов и шаблонов",
+    "career_direction": "Системное программирование",
+    "focus_advice": "RAII, State Machine для драйверов",
+    "reasoning": "RAII (Resource Acquisition Is Initialization) для гарантированного освобождения ресурсов и State Machine для моделирования протоколов работы драйверов и сетевых стеков. Полезен Object Pool — обязательная техника при работе с памятью под высокой нагрузкой."
+  },
+  {
+    "discipline": "Программирование на основе классов и шаблонов",
+    "career_direction": "DevOps / Инфраструктура",
+    "focus_advice": "Builder для конфигов, Template Method для пайплайнов",
+    "reasoning": "Builder для пошаговой сборки сложных конфигураций (Helm, Terraform) и Template Method для типовых пайплайнов CI/CD с переопределяемыми этапами. Также Adapter — каноничный способ скрыть различия между провайдерами облака за единым интерфейсом."
+  },
+  {
+    "discipline": "Программирование на основе классов и шаблонов",
+    "career_direction": "Мобильная разработка",
+    "focus_advice": "MVVM, Observer для UI-state",
+    "reasoning": "MVVM как фактический стандарт архитектуры мобильных приложений (binding, ViewModel) и Observer для реактивного обновления UI при изменении состояния. Полезен Memento — реализация сохранения и восстановления состояния экранов."
+  },
+  {
+    "discipline": "Программирование на основе классов и шаблонов",
+    "career_direction": "Геймдев",
+    "focus_advice": "ECS (Entity-Component-System), State Machine для NPC",
+    "reasoning": "ECS (Entity-Component-System) — современный подход к архитектуре игровых сущностей вместо классической иерархии наследования; и State Machine для поведения NPC и анимаций. Object Pool обязателен для управления памятью на летающих сущностях (пули, частицы)."
+  },
+  {
+    "discipline": "Программирование на основе классов и шаблонов",
+    "career_direction": "QA / Тестирование",
+    "focus_advice": "Page Object, Factory для тестовых фикстур",
+    "reasoning": "Page Object Pattern — стандарт автоматизации UI-тестов и Factory для генерации тестовых фикстур. Полезен Builder для пошагового конструирования сложных тестовых сценариев и Decorator для добавления retry-логики к шагам."
+  },
+  {
+    "discipline": "Программирование на основе классов и шаблонов",
+    "career_direction": "Аналитика данных / BI",
+    "focus_advice": "Pipeline для трансформаций, Strategy для методов",
+    "reasoning": "Pipeline для построения цепочек трансформации данных и Strategy для подмены аналитических методов (разные модели прогноза). Полезен Chain of Responsibility для пошагового data quality пайплайна с валидациями."
+  },
+  {
+    "discipline": "Теория вероятностей и мат. статистика",
+    "career_direction": "ML / Data Science",
+    "focus_advice": "Bayes, распределения, MCMC",
+    "reasoning": "Байесовский подход и распределения как математическая основа моделей машинного обучения. Также MCMC (Markov Chain Monte Carlo) — фундамент байесовского вывода в современных вероятностных моделях."
+  },
+  {
+    "discipline": "Теория вероятностей и мат. статистика",
+    "career_direction": "Бэкенд-разработка",
+    "focus_advice": "вероятностные алгоритмы: Bloom filter, HyperLogLog",
+    "reasoning": "Вероятностные структуры данных: Bloom filter (быстрая проверка членства с допустимой ошибкой) и HyperLogLog (оценка кардинальности больших множеств). Эти инструменты востребованы в системах кэширования, антифрод-движках и аналитике в режиме реального времени."
+  },
+  {
+    "discipline": "Теория вероятностей и мат. статистика",
+    "career_direction": "Фронтенд-разработка",
+    "focus_advice": "статистика A/B-тестов и значимость UX-метрик",
+    "reasoning": "Статистика A/B-тестов: t-test, χ²-test, доверительные интервалы, проверка статистической значимости результатов. Эти знания нужны чтобы корректно интерпретировать данные продуктовой аналитики и обосновывать UX-решения."
+  },
+  {
+    "discipline": "Теория вероятностей и мат. статистика",
+    "career_direction": "Кибербезопасность",
+    "focus_advice": "энтропия, рандомизация, основы криптографии",
+    "reasoning": "Энтропия как мера случайности и качества криптографических ключей, основы рандомизации и теории информации. Эти разделы — математическая база современной криптографии и протоколов аутентификации."
+  },
+  {
+    "discipline": "Теория вероятностей и мат. статистика",
+    "career_direction": "Системное программирование",
+    "focus_advice": "вероятностные структуры: Cuckoo filter, Count-min sketch",
+    "reasoning": "Вероятностные структуры данных в storage-engines: Cuckoo filter (улучшенный Bloom), Count-min sketch (приближённый подсчёт частот). Эти структуры экономят память в высоконагруженных системах ценой контролируемой ошибки."
+  },
+  {
+    "discipline": "Теория вероятностей и мат. статистика",
+    "career_direction": "DevOps / Инфраструктура",
+    "focus_advice": "статистический анализ метрик и SLO",
+    "reasoning": "Статистический анализ метрик: процентили (p95, p99) вместо средних, доверительные интервалы для SLO, обнаружение аномалий в time-series. Эти инструменты — основа осмысленного мониторинга и инцидент-менеджмента."
+  },
+  {
+    "discipline": "Теория вероятностей и мат. статистика",
+    "career_direction": "Мобильная разработка",
+    "focus_advice": "A/B-тесты раскатки фич и анализ retention",
+    "reasoning": "Статистика A/B-тестов для постепенной раскатки фич и анализа retention/engagement. На современных платформах (Firebase, Apptimize, Optimizely) без статистической базы невозможно отличить реальный эффект от шума."
+  },
+  {
+    "discipline": "Теория вероятностей и мат. статистика",
+    "career_direction": "Геймдев",
+    "focus_advice": "процедурная генерация, Markov chains для AI",
+    "reasoning": "Процедурная генерация контента на основе случайных распределений и Markov chains для моделирования поведения NPC. Также теория игр — математическая база балансировки PvP-механик."
+  },
+  {
+    "discipline": "Теория вероятностей и мат. статистика",
+    "career_direction": "QA / Тестирование",
+    "focus_advice": "property-based testing, fuzz-тесты",
+    "reasoning": "Property-based testing (генерация тестовых данных по свойствам, как Hypothesis в Python) и fuzz-тестирование (случайный ввод для поиска редких багов). Эти подходы дополняют традиционные example-based тесты."
+  },
+  {
+    "discipline": "Теория вероятностей и мат. статистика",
+    "career_direction": "Аналитика данных / BI",
+    "focus_advice": "проверка гипотез, регрессия, p-value",
+    "reasoning": "Проверка гипотез: формулировка H₀/H₁, выбор статистического критерия, расчёт p-value, контроль ошибок первого и второго рода. Также линейная и логистическая регрессия — рабочая лошадка прикладной аналитики."
+  },
+  {
+    "discipline": "Модели данных",
+    "career_direction": "ML / Data Science",
+    "focus_advice": "feature engineering, временные ряды",
+    "reasoning": "Feature engineering: подготовка признаков из сырых данных, кодирование категорий, работа с временными рядами и оконными агрегатами. Эти навыки определяют качество входа в любую ML-модель не меньше, чем сама модель."
+  },
+  {
+    "discipline": "Модели данных",
+    "career_direction": "Бэкенд-разработка",
+    "focus_advice": "реляционные vs документные vs графовые",
+    "reasoning": "Сравнительный анализ реляционной, документной и графовой моделей данных: когда что выбирать, плюсы и минусы под разные сценарии. Знание trade-offs позволяет осознанно выбирать СУБД, а не следовать моде на NoSQL или «всегда PostgreSQL»."
+  },
+  {
+    "discipline": "Модели данных",
+    "career_direction": "Фронтенд-разработка",
+    "focus_advice": "нормализация клиентского state (Apollo, Redux)",
+    "reasoning": "Нормализация клиентского состояния по принципам реляционной модели (как в Apollo Client cache и Redux Toolkit). Эти подходы решают типовые проблемы дублирования и рассинхронизации данных в SPA."
+  },
+  {
+    "discipline": "Модели данных",
+    "career_direction": "Кибербезопасность",
+    "focus_advice": "модели угроз: STRIDE, STIX/TAXII",
+    "reasoning": "Модели угроз: STRIDE (Microsoft) для классификации угроз и STIX/TAXII как промышленные стандарты обмена threat intelligence. Эти модели — основа структурированного подхода к threat modeling."
+  },
+  {
+    "discipline": "Модели данных",
+    "career_direction": "Системное программирование",
+    "focus_advice": "формальные модели данных СУБД",
+    "reasoning": "Формальные модели данных в СУБД-движках: реляционная алгебра, MVCC, write-ahead logging как реализация модели транзакций. Без этого создание собственных storage-решений сводится к угадыванию."
+  },
+  {
+    "discipline": "Модели данных",
+    "career_direction": "DevOps / Инфраструктура",
+    "focus_advice": "модели observability: метрики, логи, трейсы",
+    "reasoning": "Модели данных в observability: time-series для метрик, structured logs, distributed traces. Понимание этих моделей нужно для осознанной работы с Prometheus, Loki, Tempo, Jaeger."
+  },
+  {
+    "discipline": "Модели данных",
+    "career_direction": "Мобильная разработка",
+    "focus_advice": "SQLite, Realm, CoreData — выбор хранилища",
+    "reasoning": "Сравнительный обзор мобильных хранилищ: SQLite (универсально), Realm (objects-as-data), CoreData (Apple-native). Выбор зависит от модели данных приложения, требований к производительности и кросс-платформенности."
+  },
+  {
+    "discipline": "Модели данных",
+    "career_direction": "Геймдев",
+    "focus_advice": "ECS-данные и сериализация состояния",
+    "reasoning": "Модели данных ECS (Entity-Component-System) и сериализация игрового состояния (saved games, multiplayer snapshots). Это основа архитектуры современных игровых движков."
+  },
+  {
+    "discipline": "Модели данных",
+    "career_direction": "QA / Тестирование",
+    "focus_advice": "модели тестовых данных, параметризация",
+    "reasoning": "Модели тестовых данных: параметризованные тесты, data-driven testing, генераторы тестовых наборов. Хорошая модель данных в тестах сокращает дублирование кода и упрощает поддержку."
+  },
+  {
+    "discipline": "Модели данных",
+    "career_direction": "Аналитика данных / BI",
+    "focus_advice": "dimensional modeling, Kimball, Inmon",
+    "reasoning": "Dimensional modeling: star schema, snowflake schema, подходы Kimball (bottom-up) и Inmon (top-down). Эти модели — основа классического Data Warehouse и принятых в индустрии BI-витрин."
+  },
+  {
+    "discipline": "Базы данных",
+    "career_direction": "ML / Data Science",
+    "focus_advice": "оконные функции, аналитические агрегаты",
+    "reasoning": "Оконные функции (ROW_NUMBER, LAG, LEAD) и аналитические агрегаты SQL — стандартный инструмент подготовки выборок для обучения моделей. Также CTE для читаемых многошаговых трансформаций больших датасетов."
+  },
+  {
+    "discipline": "Базы данных",
+    "career_direction": "Бэкенд-разработка",
+    "focus_advice": "индексы, EXPLAIN, транзакции",
+    "reasoning": "Индексы (B-tree, GIN, partial) и их грамотный подбор под основные запросы, анализ EXPLAIN, управление транзакциями и уровнями изоляции. Это база производительной серверной разработки."
+  },
+  {
+    "discipline": "Базы данных",
+    "career_direction": "Фронтенд-разработка",
+    "focus_advice": "IndexedDB и офлайн-стратегии",
+    "reasoning": "IndexedDB как клиентское хранилище для PWA, стратегии офлайн-режима с фоновой синхронизацией и разрешением конфликтов. Также Service Worker API для прозрачного кеширования сетевых запросов."
+  },
+  {
+    "discipline": "Базы данных",
+    "career_direction": "Кибербезопасность",
+    "focus_advice": "защита от SQL-injection, access control, audit",
+    "reasoning": "Защита от SQL-injection (parameterized queries, ORM), модели разграничения доступа (row-level security, column-level permissions), аудит-логирование изменений данных. Это фундамент защиты любой data-driven системы."
+  },
+  {
+    "discipline": "Базы данных",
+    "career_direction": "Системное программирование",
+    "focus_advice": "внутренности WAL, B-tree, MVCC",
+    "reasoning": "Внутренности СУБД: устройство WAL (write-ahead log) для гарантий ACID, B-tree как основной индексный примитив, MVCC для конкурентного доступа. Эти знания нужны для разработки собственных storage-решений."
+  },
+  {
+    "discipline": "Базы данных",
+    "career_direction": "DevOps / Инфраструктура",
+    "focus_advice": "репликация, PITR, бэкапы",
+    "reasoning": "Репликация (master-replica, multi-master), Point-in-Time Recovery, стратегии бэкапов и тестирование восстановления. Эти темы — операционная сторона продакшен-баз данных."
+  },
+  {
+    "discipline": "Базы данных",
+    "career_direction": "Мобильная разработка",
+    "focus_advice": "SQLite (FTS), миграции схем",
+    "reasoning": "Углублённая работа с SQLite (FTS для поиска, миграции схем без потери данных), стратегии офлайн-синхронизации с серверной БД. На мобильных платформах локальная БД — обязательный компонент."
+  },
+  {
+    "discipline": "Базы данных",
+    "career_direction": "Геймдев",
+    "focus_advice": "NoSQL под лидерборды, Redis для real-time",
+    "reasoning": "NoSQL под глобальные лидерборды (Cassandra, DynamoDB), Redis для real-time состояния (матчмейкинг, кеши сессий). Эти технологии — стандарт backend онлайн-игр."
+  },
+  {
+    "discipline": "Базы данных",
+    "career_direction": "QA / Тестирование",
+    "focus_advice": "data factories, тестовые миграции",
+    "reasoning": "Data factories для генерации тестовых данных (factory_boy, FactoryBot), управление тестовыми миграциями, изоляция тестовых наборов. Без этой инфраструктуры сложно поддерживать большие тестовые наборы."
+  },
+  {
+    "discipline": "Базы данных",
+    "career_direction": "Аналитика данных / BI",
+    "focus_advice": "OLAP, материализованные представления",
+    "reasoning": "OLAP-агрегации (CUBE, ROLLUP), материализованные представления для предвычисленных витрин, индексы для аналитических запросов. Это базовые техники DWH-инженерии."
+  },
+  {
+    "discipline": "Системное программирование",
+    "career_direction": "ML / Data Science",
+    "focus_advice": "numpy под капотом, GIL, многопроцессность",
+    "reasoning": "Внутреннее устройство numpy (vectorization, BLAS), Python GIL и его обход через multiprocessing, использование shared memory для передачи больших массивов. Эти знания критичны для оптимизации ML-пайплайнов на CPU."
+  },
+  {
+    "discipline": "Системное программирование",
+    "career_direction": "Бэкенд-разработка",
+    "focus_advice": "epoll, non-blocking IO, futexes",
+    "reasoning": "epoll/kqueue как основа event-loop серверов, non-blocking IO, futexes как примитив синхронизации в Linux. Эти темы — фундамент высокопроизводительных серверов (nginx, Redis)."
+  },
+  {
+    "discipline": "Системное программирование",
+    "career_direction": "Фронтенд-разработка",
+    "focus_advice": "WebAssembly, Web Workers",
+    "reasoning": "WebAssembly как способ запускать нативный код в браузере и Web Workers для выноса тяжёлых задач из main thread. Эти технологии расширяют возможности фронтенда до compute-intensive задач."
+  },
+  {
+    "discipline": "Системное программирование",
+    "career_direction": "Кибербезопасность",
+    "focus_advice": "процессы, привилегии, capabilities",
+    "reasoning": "Уровни привилегий процессов, Linux capabilities, seccomp-bpf для ограничения syscalls. Эти механизмы — основа sandbox-решений и runtime-защиты."
+  },
+  {
+    "discipline": "Системное программирование",
+    "career_direction": "Системное программирование",
+    "focus_advice": "системные вызовы Linux, IPC",
+    "reasoning": "Системные вызовы Linux (read, write, mmap, fork, exec), IPC механизмы (pipes, sockets, shared memory, message queues). Это базовый словарь системного программиста."
+  },
+  {
+    "discipline": "Системное программирование",
+    "career_direction": "DevOps / Инфраструктура",
+    "focus_advice": "systemd, journald, cgroups",
+    "reasoning": "systemd как менеджер сервисов, journald для структурированных логов, cgroups для управления ресурсами. Эти подсистемы — основа современного Linux-сервера."
+  },
+  {
+    "discipline": "Системное программирование",
+    "career_direction": "Мобильная разработка",
+    "focus_advice": "NDK, JNI, нативные модули",
+    "reasoning": "Android NDK и JNI для написания производительных модулей на C++, особенности интеграции с управляемым кодом Java/Kotlin. Также Foreign Function Interface для Swift/iOS."
+  },
+  {
+    "discipline": "Системное программирование",
+    "career_direction": "Геймдев",
+    "focus_advice": "SIMD, cache-friendly код",
+    "reasoning": "SIMD-инструкции (SSE, AVX, NEON) для векторизации горячих функций, cache-friendly структуры данных для игр (Data-Oriented Design). Эти техники дают многократный прирост производительности."
+  },
+  {
+    "discipline": "Системное программирование",
+    "career_direction": "QA / Тестирование",
+    "focus_advice": "ptrace, valgrind, memory leaks",
+    "reasoning": "ptrace для отладки на низком уровне, valgrind для поиска memory leaks и race conditions, AddressSanitizer для runtime-проверок. Эти инструменты — стандарт QA для C/C++ кода."
+  },
+  {
+    "discipline": "Системное программирование",
+    "career_direction": "Аналитика данных / BI",
+    "focus_advice": "mmap, SIMD-агрегация",
+    "reasoning": "mmap для эффективной работы с большими файлами без полной загрузки в память, SIMD для векторизации аналитических агрегаций. Эти техники — основа быстрых движков (DuckDB, ClickHouse)."
+  },
+  {
+    "discipline": "Операционные системы",
+    "career_direction": "ML / Data Science",
+    "focus_advice": "GPU-планирование, CUDA streams",
+    "reasoning": "GPU-планирование (CUDA streams, асинхронные операции), управление памятью на GPU, особенности работы с heterogeneous compute. Без этой базы ускоренное обучение моделей сводится к угадыванию параметров."
+  },
+  {
+    "discipline": "Операционные системы",
+    "career_direction": "Бэкенд-разработка",
+    "focus_advice": "контекстное переключение, thread pool tuning",
+    "reasoning": "Стоимость контекстного переключения и его влияние на throughput, тонкая настройка thread pool под профиль нагрузки. Эти темы — основа осмысленного capacity planning."
+  },
+  {
+    "discipline": "Операционные системы",
+    "career_direction": "Фронтенд-разработка",
+    "focus_advice": "Service Worker, Browser Threading Model",
+    "reasoning": "Service Worker как мини-ОС в браузере (фоновые задачи, push-уведомления, кеш), Browser Threading Model (main thread, Web Workers, OffscreenCanvas). Эти знания нужны для глубокой оптимизации сложных SPA."
+  },
+  {
+    "discipline": "Операционные системы",
+    "career_direction": "Кибербезопасность",
+    "focus_advice": "ASLR, DEP, уровни привилегий",
+    "reasoning": "ASLR (Address Space Layout Randomization), DEP/NX-bit, уровни привилегий ring 0/3 и kernel mode. Это база современных hardware-assisted механизмов защиты от exploit'ов."
+  },
+  {
+    "discipline": "Операционные системы",
+    "career_direction": "Системное программирование",
+    "focus_advice": "ядро, syscalls, управление памятью",
+    "reasoning": "Устройство ядра, системные вызовы как контракт userspace↔kernel, виртуальная память и page tables. Это сердцевина дисциплины для будущего системного программиста."
+  },
+  {
+    "discipline": "Операционные системы",
+    "career_direction": "DevOps / Инфраструктура",
+    "focus_advice": "cgroups, namespaces, systemd",
+    "reasoning": "cgroups (изоляция ресурсов), namespaces (изоляция видимости), systemd как менеджер сервисов. Эти три механизма — фундамент контейнеризации (Docker, Kubernetes runtime)."
+  },
+  {
+    "discipline": "Операционные системы",
+    "career_direction": "Мобильная разработка",
+    "focus_advice": "жизненный цикл процессов Android/iOS",
+    "reasoning": "Жизненный цикл процессов Android (background, foreground, killed) и iOS (suspended, terminated), memory pressure и стратегии освобождения. Эти знания критичны для UX мобильных приложений."
+  },
+  {
+    "discipline": "Операционные системы",
+    "career_direction": "Геймдев",
+    "focus_advice": "real-time priority, scheduling для игр",
+    "reasoning": "Real-time priority процессов, особенности планировщика для игр (минимизация jitter), работа с high-precision таймерами. Эти темы — основа стабильного frame-rate."
+  },
+  {
+    "discipline": "Операционные системы",
+    "career_direction": "QA / Тестирование",
+    "focus_advice": "контейнеризация для изолированного тестирования",
+    "reasoning": "Использование контейнеризации (Docker, Podman) для воспроизводимых тестовых окружений, sandbox-исполнение подозрительного кода. Это операционная сторона современного CI."
+  },
+  {
+    "discipline": "Операционные системы",
+    "career_direction": "Аналитика данных / BI",
+    "focus_advice": "фоновые задачи, cron, workflow",
+    "reasoning": "Фоновые задачи, cron как простой scheduler, workflow-оркестраторы (Airflow, Prefect) и их интеграция с ОС. Эти инструменты — основа любого ETL-пайплайна."
+  },
+  {
+    "discipline": "Сети и телекоммуникации",
+    "career_direction": "ML / Data Science",
+    "focus_advice": "распределённое обучение, RDMA",
+    "reasoning": "Распределённое обучение моделей: коллективные операции (allreduce), особенности RDMA для high-throughput коммуникации между нодами. Без этой базы scale-up за пределы одной машины упирается в сетевые тормоза."
+  },
+  {
+    "discipline": "Сети и телекоммуникации",
+    "career_direction": "Бэкенд-разработка",
+    "focus_advice": "TCP/UDP/QUIC, HTTP/2, keep-alive",
+    "reasoning": "Сравнительные характеристики TCP / UDP / QUIC, HTTP/2 multiplexing, keep-alive и connection pooling. Эти знания — основа осознанной разработки сетевых сервисов."
+  },
+  {
+    "discipline": "Сети и телекоммуникации",
+    "career_direction": "Фронтенд-разработка",
+    "focus_advice": "HTTP кеширование, CORS, WebSockets",
+    "reasoning": "HTTP-кеширование (Cache-Control, ETag, stale-while-revalidate), CORS как механизм same-origin policy, WebSockets для двусторонней коммуникации. Это сетевой словарь современного фронтенда."
+  },
+  {
+    "discipline": "Сети и телекоммуникации",
+    "career_direction": "Кибербезопасность",
+    "focus_advice": "TLS, анализ трафика, протоколы и уязвимости",
+    "reasoning": "TLS handshake и certificate validation, инструменты анализа трафика (Wireshark, tcpdump), типовые уязвимости протоколов (BEAST, POODLE, Heartbleed). Это база работы аналитика сетевой безопасности."
+  },
+  {
+    "discipline": "Сети и телекоммуникации",
+    "career_direction": "Системное программирование",
+    "focus_advice": "сокеты, сетевой стек ядра",
+    "reasoning": "Низкоуровневые сокеты (BSD sockets API), внутреннее устройство сетевого стека Linux (sk_buff, NAPI, netfilter). Эти знания нужны для разработки сетевых сервисов с минимальной задержкой."
+  },
+  {
+    "discipline": "Сети и телекоммуникации",
+    "career_direction": "DevOps / Инфраструктура",
+    "focus_advice": "load balancing, DNS, service mesh",
+    "reasoning": "Балансировка нагрузки (L4 vs L7, алгоритмы), DNS (рекурсивный/итеративный resolve, кеширование), service mesh (Envoy, Istio). Это операционная сторона современной сетевой инфраструктуры."
+  },
+  {
+    "discipline": "Сети и телекоммуникации",
+    "career_direction": "Мобильная разработка",
+    "focus_advice": "оптимизация мобильных сетей, push-уведомления",
+    "reasoning": "Оптимизация под нестабильные мобильные сети (повторные попытки, fallback на 3G), реализация push-уведомлений (FCM, APNs). Эти темы определяют UX мобильных приложений в реальных условиях."
+  },
+  {
+    "discipline": "Сети и телекоммуникации",
+    "career_direction": "Геймдев",
+    "focus_advice": "UDP для real-time, lag compensation",
+    "reasoning": "UDP как транспорт для real-time игр, лаг-компенсация, client-side prediction, rollback netcode. Эти техники — стандарт сетевого кода multiplayer-игр."
+  },
+  {
+    "discipline": "Сети и телекоммуникации",
+    "career_direction": "QA / Тестирование",
+    "focus_advice": "моки HTTP, chaos network testing",
+    "reasoning": "Моки HTTP (WireMock, MSW), chaos network testing (toxiproxy, эмуляция потерь и задержек). Эти инструменты — стандарт автоматизации тестирования сетевых сервисов."
+  },
+  {
+    "discipline": "Сети и телекоммуникации",
+    "career_direction": "Аналитика данных / BI",
+    "focus_advice": "streaming protocols, Kafka",
+    "reasoning": "Streaming-протоколы (Kafka, Pulsar, Kinesis), упорядоченная доставка по партициям, exactly-once-семантика. Эти технологии — основа event-driven аналитики."
+  },
+  {
+    "discipline": "Технологии машинного обучения",
+    "career_direction": "ML / Data Science",
+    "focus_advice": "end-to-end pipelines, MLflow, model serving",
+    "reasoning": "End-to-end ML-пайплайны (от данных до сервинга), управление экспериментами через MLflow, model serving в production (TorchServe, BentoML, Seldon). Это профильный фокус — основа карьеры ML-инженера."
+  },
+  {
+    "discipline": "Технологии машинного обучения",
+    "career_direction": "Бэкенд-разработка",
+    "focus_advice": "интеграция моделей в API, кеширование инференса",
+    "reasoning": "Интеграция моделей в production API (REST/gRPC обёртки над инференсом), кеширование результатов и batching запросов. Это типовые задачи backend-разработчика в командах с ML-компонентами."
+  },
+  {
+    "discipline": "Технологии машинного обучения",
+    "career_direction": "Фронтенд-разработка",
+    "focus_advice": "TensorFlow.js, on-device inference",
+    "reasoning": "TensorFlow.js и on-device inference в браузере: расчёт прогнозов прямо на клиенте без обращения к серверу. Полезно для приватности данных и снижения latency."
+  },
+  {
+    "discipline": "Технологии машинного обучения",
+    "career_direction": "Кибербезопасность",
+    "focus_advice": "ML для anomaly detection, adversarial attacks",
+    "reasoning": "ML для anomaly detection (Isolation Forest, autoencoders), adversarial attacks на ML-системы и защита от них. Это активно развивающаяся область — ML вошёл в security stack."
+  },
+  {
+    "discipline": "Технологии машинного обучения",
+    "career_direction": "Системное программирование",
+    "focus_advice": "оптимизация инференса, ONNX runtime",
+    "reasoning": "Низкоуровневая оптимизация инференса: квантизация, pruning, использование ONNX Runtime и TensorRT для ускорения. Эти техники критичны для edge-deployment моделей."
+  },
+  {
+    "discipline": "Технологии машинного обучения",
+    "career_direction": "DevOps / Инфраструктура",
+    "focus_advice": "MLOps, CI/CD для моделей",
+    "reasoning": "MLOps как практика: CI/CD для моделей, версионирование данных и моделей, мониторинг качества в production. Эта область требует пересечения навыков ML и инфраструктуры."
+  },
+  {
+    "discipline": "Технологии машинного обучения",
+    "career_direction": "Мобильная разработка",
+    "focus_advice": "Core ML, TensorFlow Lite на устройстве",
+    "reasoning": "On-device ML: Core ML на iOS, TensorFlow Lite на Android, особенности Neural Engine и hardware-ускорения. Это направление активно растёт с развитием AI-функций в смартфонах."
+  },
+  {
+    "discipline": "Технологии машинного обучения",
+    "career_direction": "Геймдев",
+    "focus_advice": "ML для поведения NPC, procedural content",
+    "reasoning": "ML для поведения NPC (reinforcement learning, imitation learning), procedural content generation на основе генеративных моделей. ML-инструменты постепенно входят в gamedev-стек."
+  },
+  {
+    "discipline": "Технологии машинного обучения",
+    "career_direction": "QA / Тестирование",
+    "focus_advice": "тестирование ML моделей, drift detection",
+    "reasoning": "Тестирование ML-моделей: проверка метрик качества, обнаружение data drift и concept drift, A/B-тесты моделей в production. Это специализация QA для ML-команд."
+  },
+  {
+    "discipline": "Технологии машинного обучения",
+    "career_direction": "Аналитика данных / BI",
+    "focus_advice": "классический ML, интерпретация (SHAP, LIME)",
+    "reasoning": "Классический ML для аналитики: регрессия, классификация, кластеризация, методы интерпретации моделей (SHAP, LIME). Эти инструменты дополняют статистический анализ в работе аналитика."
+  }
+]

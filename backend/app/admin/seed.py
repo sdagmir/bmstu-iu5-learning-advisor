@@ -27,6 +27,7 @@ from app.db.models import (
     CompetencyCategory,
     Discipline,
     DisciplineType,
+    FocusAdvice,
     StudentCompletedCK,
     StudentGrade,
     TechparkStatus,
@@ -160,6 +161,50 @@ async def seed_ck_courses(db: AsyncSession, tag_map: dict[str, Competency]) -> N
     await db.flush()
 
 
+# ── Фокусы в дисциплинах ──────────────────────────────────────────────────
+
+
+async def seed_focus_advices(db: AsyncSession) -> None:
+    """Сидирование советов по фокусам в дисциплинах из focus_advices.json.
+
+    Каждая запись — пара «дисциплина + карьерное направление». Идемпотентно:
+    пропускает уже существующие пары.
+    """
+    logger.info("Сидирование фокусов в дисциплинах...")
+    data = _load_json("focus_advices.json")
+
+    disc_result = await db.execute(select(Discipline))
+    disc_by_name = {d.name: d for d in disc_result.scalars().all()}
+    dir_result = await db.execute(select(CareerDirection))
+    dir_by_name = {c.name: c for c in dir_result.scalars().all()}
+
+    created = 0
+    for item in data:
+        disc = disc_by_name.get(item["discipline"])
+        direction = dir_by_name.get(item["career_direction"])
+        if disc is None or direction is None:
+            continue
+        exists = await db.execute(
+            select(FocusAdvice).where(
+                FocusAdvice.discipline_id == disc.id,
+                FocusAdvice.career_direction_id == direction.id,
+            )
+        )
+        if exists.scalar_one_or_none() is not None:
+            continue
+        db.add(
+            FocusAdvice(
+                discipline_id=disc.id,
+                career_direction_id=direction.id,
+                focus_advice=item["focus_advice"],
+                reasoning=item.get("reasoning"),
+            )
+        )
+        created += 1
+    await db.flush()
+    logger.info("Фокусов в дисциплинах загружено: %d", created)
+
+
 # ── Правила ЭС ────────────────────────────────────────────────────────────
 
 
@@ -260,6 +305,7 @@ async def run_seed() -> None:
             await seed_career_directions(db, tag_map)
             await seed_disciplines(db, tag_map)
             await seed_ck_courses(db, tag_map)
+            await seed_focus_advices(db)
             await seed_rules(db)
             await seed_demo_account(db)
             await db.commit()
